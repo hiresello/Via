@@ -8,7 +8,7 @@ import { openOntology } from '../ontology.js';
 import { seedOntology } from '../seed.js';
 import { likeProject, presentBoard, rankBoard, saveProfile, submitProject, ensurePerson } from '../service.js';
 import { thumbDiskPath, thumbFileName, thumbRelPath } from '../thumb.js';
-import { renderBoard, renderMe, renderNew, renderPrivacy, renderProject, renderTerms } from './html.js';
+import { renderBoard, renderBuilders, renderMe, renderNew, renderPrivacy, renderProject, renderTerms } from './html.js';
 
 loadEnv(path.join(rootDir, '.env'));
 
@@ -31,8 +31,7 @@ export async function getOntology() {
 
 export async function bootBoard() {
   const ont = await getOntology();
-  const snaps = ont.query({ type: 'RankSnapshot' });
-  if (!snaps.length && ont.query({ type: 'Project' }).length) {
+  if (ont.query({ type: 'Project' }).length) {
     await rankBoard(ont, { forceStub: !process.env.OPENROUTER_API_KEY });
   }
   return presentBoard(ont);
@@ -51,6 +50,9 @@ export async function handle(req, res) {
     if (req.method === 'GET' && url.pathname.startsWith('/thumbs/')) {
       return sendThumb(url.pathname, res);
     }
+    if (req.method === 'GET' && (url.pathname === '/via-discord-icon-512.png' || url.pathname === '/favicon.ico')) {
+      return sendLogo(res);
+    }
     if (req.method === 'GET' && url.pathname.startsWith('/og/') && url.pathname.endsWith('.png')) {
       const id = decodeURIComponent(url.pathname.slice(4, -4));
       const projectId = id.startsWith('prj_') ? id : `prj_${id}`;
@@ -59,6 +61,10 @@ export async function handle(req, res) {
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/leaderboard')) {
       await bootBoard();
       return html(res, renderBoard(presentBoard(await getOntology()), { origin }));
+    }
+    if (req.method === 'GET' && url.pathname === '/builders') {
+      await bootBoard();
+      return html(res, renderBuilders(presentBoard(await getOntology())));
     }
     if (req.method === 'GET' && url.pathname === '/p/new') {
       return html(res, renderNew((await getOntology()).query({ type: 'Event' })));
@@ -187,6 +193,13 @@ function sendFont(pathname, res) {
       ? 'font/ttf'
       : 'font/otf';
   res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' });
+  fs.createReadStream(file).pipe(res);
+}
+
+function sendLogo(res) {
+  const file = path.join(rootDir, 'public', 'via-discord-icon-512.png');
+  if (!fs.existsSync(file)) return text(res, 'Logo missing', 404);
+  res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
   fs.createReadStream(file).pipe(res);
 }
 

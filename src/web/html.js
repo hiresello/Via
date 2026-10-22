@@ -19,8 +19,8 @@ export function renderBoard(board, { origin = publicUrl() } = {}) {
     ? ''
     : '<p class="via-empty">No projects in the seed file. The board does not invent any.</p>';
   return layout({
-    title: 'Via · the bar',
-    active: 'bar',
+    title: 'Via · builds',
+    active: 'builds',
     origin,
     main: `
       <section class="via-hero via-enter">
@@ -30,6 +30,66 @@ export function renderBoard(board, { origin = publicUrl() } = {}) {
       <ol class="via-board">${rows}</ol>
       ${empty}`,
   });
+}
+
+export function renderBuilders(board) {
+  const people = rankBuilders(board);
+  const rows = people.map((person, index) => builderHtml(person, index + 1)).join('\n');
+  const empty = people.length
+    ? ''
+    : '<p class="via-empty">No builders on the board yet.</p>';
+  return layout({
+    title: 'Via · builders',
+    active: 'builders',
+    main: `
+      <section class="via-hero via-enter">
+        <h1 class="via-display">${caps('Builders')}</h1>
+        <p class="via-lede">${people.length} people</p>
+      </section>
+      <ol class="via-board via-board--people">${rows}</ol>
+      ${empty}`,
+  });
+}
+
+function rankBuilders(board) {
+  const map = new Map();
+  for (const row of board.rows || []) {
+    for (const person of row.builders || []) {
+      const key = person.id || person.display_name;
+      if (!key || !person.display_name) continue;
+      const current = map.get(key) || {
+        name: person.display_name,
+        score: 0,
+        projects: 0,
+        best: Infinity,
+      };
+      const score = Number(row.score);
+      if (Number.isFinite(score)) current.score += score;
+      current.projects += 1;
+      if (Number.isFinite(Number(row.rank))) current.best = Math.min(current.best, Number(row.rank));
+      map.set(key, current);
+    }
+  }
+  return [...map.values()].sort((a, b) => b.score - a.score || a.best - b.best || a.name.localeCompare(b.name));
+}
+
+function builderHtml(person, rank) {
+  const medal = rank === 1 ? 'via-card--rank1 via-card--gold'
+    : rank === 2 ? 'via-card--silver'
+      : rank === 3 ? 'via-card--bronze'
+        : '';
+  const score = Math.round(person.score);
+  const builds = person.projects === 1 ? '1 build' : `${person.projects} builds`;
+  return `<li class="via-card via-card--person ${medal}">
+    <div class="via-card__body">
+      <div class="via-card__head">
+        <span class="via-rank">${String(rank).padStart(2, '0')}</span>
+        <h2 class="via-person">${escapeHtml(person.name)}</h2>
+        <span class="via-points__n">${score}</span>
+      </div>
+      <p class="via-meta-line">${builds}</p>
+    </div>
+  </li>`;
 }
 
 export function renderNew(events, error) {
@@ -56,7 +116,7 @@ export function renderNew(events, error) {
         <div class="via-field-row"><label class="via-label">Organizers</label><input class="via-input" name="organizers" placeholder="Leave blank for null"></div>
         <div class="via-actions"><button type="submit" class="via-btn via-btn--primary">${caps('Post')}</button></div>
       </form>
-      <a class="via-back" href="/">Via · back to the bar</a>`,
+      <a class="via-back" href="/">Via · back to builds</a>`,
   });
 }
 
@@ -67,7 +127,7 @@ export function renderProject(row, { origin = publicUrl() } = {}) {
   const builders = row.builders.map((person) => escapeHtml(person.display_name)).filter(Boolean).join(' · ');
   return layout({
     title: `${project.title || 'Project'} · Via`,
-    active: 'bar',
+    active: 'builds',
     origin,
     meta: {
       title: caps(project.title || 'Via project'),
@@ -94,7 +154,7 @@ export function renderProject(row, { origin = publicUrl() } = {}) {
           </form>
         </section>
       </article>
-      <a class="via-back" href="/">Via · back to the bar</a>`,
+      <a class="via-back" href="/">Via · back to builds</a>`,
   });
 }
 
@@ -118,7 +178,7 @@ export function renderMe(person, error) {
         <div class="via-field-row"><label class="via-label">Looking for</label><input class="via-input" name="looking_for" value="${escapeHtml(person?.looking_for || '')}"></div>
         <div class="via-actions"><button type="submit" class="via-btn via-btn--primary">${caps('Save')}</button></div>
       </form>
-      <a class="via-back" href="/">Via · back to the bar</a>`,
+      <a class="via-back" href="/">Via · back to builds</a>`,
   });
 }
 
@@ -143,7 +203,7 @@ export function renderTerms() {
         <p class="via-label">Contact</p>
         <p>Questions go through the Via Discord guild operators. Privacy details are on <a href="/privacy">/privacy</a>.</p>
       </article>
-      <a class="via-back" href="/">Via · back to the bar</a>`,
+      <a class="via-back" href="/">Via · back to builds</a>`,
   });
 }
 
@@ -166,7 +226,7 @@ export function renderPrivacy() {
         <ul>
           <li><strong>Discord user id</strong> — when you use the bot (slash commands, Like), so likes and actions attach to you in that guild.</li>
           <li><strong>Opt-in profile</strong> — fields you save on <span class="via-mono">/me</span> (name, optional Discord id, GitHub, X, skills, looking-for). Blank fields stay blank.</li>
-          <li><strong>Likes</strong> — who liked which project and the signal type, so the bar can re-rank by conviction.</li>
+          <li><strong>Likes</strong> — who liked which project and the signal type, so Builds can re-rank by conviction.</li>
           <li><strong>Intro / speaker logs</strong> — when those commands run, Via logs the match or shortlist attempt (who, topic, reason or failure) in the Ontology so a failed match stays honest.</li>
         </ul>
         <p class="via-label">What we do not do</p>
@@ -176,7 +236,7 @@ export function renderPrivacy() {
         <p class="via-label">Your choices</p>
         <p>Skip <span class="via-mono">/me</span> if you do not want a profile. Ask a guild operator to remove your Person, likes, or logs. Terms are on <a href="/terms">/terms</a>.</p>
       </article>
-      <a class="via-back" href="/">Via · back to the bar</a>`,
+      <a class="via-back" href="/">Via · back to builds</a>`,
   });
 }
 
@@ -194,11 +254,6 @@ function rowHtml(row, origin = publicUrl()) {
     : Number.isFinite(delta) && delta < 0
       ? `<span class="via-delta via-delta--down">↓${Math.abs(delta)}</span>`
       : '';
-  const builders = row.builders.map((person) => person.display_name).filter(Boolean);
-  const metaBits = [
-    builders.length ? builders.join(' · ') : '',
-    project.hackathon || '',
-  ].filter(Boolean);
   const reason = specificReason(row.reason);
   const thumb = projectThumbSrc(project, origin);
   const projectHref = `/p/${encodeURIComponent(project.id)}`;
@@ -206,11 +261,11 @@ function rowHtml(row, origin = publicUrl()) {
   return `<li class="${cardClass}">
     <a class="via-thumb" href="${escapeHtml(projectHref)}">
       <img src="${escapeHtml(thumb)}" alt="${escapeHtml(caps(project.title || 'untitled'))}" width="1080" height="1350" loading="lazy">
-      <span class="via-rank">${caps(String(row.rank).padStart(2, '0'))}</span>
-      ${arrow}
     </a>
     <div class="via-card__body">
       <div class="via-card__head">
+        <span class="via-rank">${String(row.rank).padStart(2, '0')}</span>
+        ${arrow}
         <div class="via-points" aria-label="Score ${pct}, ${row.likes} likes">
           <span class="via-points__n">${pct}</span>
           <span class="via-bar"><span class="via-bar__fill" style="width:${pct}%"></span></span>
@@ -225,9 +280,6 @@ function rowHtml(row, origin = publicUrl()) {
           </button>
         </form>
       </div>
-      <h2 class="via-display via-card__title"><a href="${escapeHtml(projectHref)}">${escapeHtml(caps(project.title || 'untitled'))}</a></h2>
-      ${project.one_liner ? `<p class="via-liner">${escapeHtml(project.one_liner)}</p>` : ''}
-      ${metaBits.length ? `<p class="via-meta-line">${escapeHtml(metaBits.join(' · '))}</p>` : ''}
       ${pathButtons(project)}
       ${reason ? `<p class="via-reason">${escapeHtml(reason)}</p>` : ''}
     </div>
@@ -259,7 +311,6 @@ function pathButtons(project) {
 
 function layout({ title, active, main, meta = null }) {
   const face = displayFontFace('/fonts/');
-  // Apestron when local trial file / VIA_DISPLAY_FONT; else OFL Syne (clone default). Never Inter.
   const displayOverride = displayStackCss();
   const og = meta
     ? `
@@ -280,6 +331,8 @@ function layout({ title, active, main, meta = null }) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
+<link rel="icon" type="image/png" href="/via-discord-icon-512.png">
+<link rel="apple-touch-icon" href="/via-discord-icon-512.png">
 ${og}
 <style>${face}
 ${displayOverride}
@@ -287,25 +340,30 @@ ${displayOverride}
 <link rel="stylesheet" href="/via-ui.css">
 <style>
   a, a:hover, a:visited { text-decoration: none; }
-  .via-shell { width: min(1080px, calc(100% - 32px)); }
+  .via-shell { width: min(920px, calc(100% - 48px)); }
   .via-nav { margin-bottom: 8px; }
+  .via-nav__brand { display: inline-flex; align-items: center; gap: 10px; }
+  .via-logo { width: 28px; height: 28px; border-radius: 7px; display: block; }
   .via-nav__links a { color: var(--via-muted); }
+  .via-nav__links a.is-active { color: var(--via-accent); }
   .via-hero { padding: 48px 0 40px; }
   .via-hero .via-display { font-size: clamp(3.25rem, 8vw, 4.75rem); letter-spacing: 0.01em; }
   .via-lede { margin: 16px 0 0; color: var(--via-muted); font-family: var(--via-font-ui); font-weight: 400; font-size: 15px; }
   .via-board {
     list-style: none; margin: 0; padding: 0;
-    display: grid; gap: 28px; justify-content: center;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 320px));
+    display: grid; gap: 40px 32px; justify-content: center;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   }
-  .via-card--post {
-    display: grid; gap: 12px; padding: 0; margin: 0; overflow: hidden; max-width: 320px;
+  .via-board--people { grid-template-columns: 1fr; }
+  .via-card--post, .via-card--person {
+    display: grid; gap: 14px; padding: 14px; margin: 0; overflow: hidden; max-width: none;
     background: transparent; border: 0; box-shadow: none; backdrop-filter: none;
   }
+  .via-person { margin: 0; font-family: var(--via-font-ui); font-weight: 400; font-size: 1.35rem; letter-spacing: 0; text-transform: none; }
   .via-card--gold { outline: 2px solid #e6c15a; border-radius: 18px; }
   .via-card--silver { outline: 2px solid #c5ccd4; border-radius: 18px; }
   .via-card--bronze { outline: 2px solid #c9844a; border-radius: 18px; }
-  .via-card--gold .via-rank { color: #e6c15a; }
+  .via-card--gold .via-rank { color: #7cff77; }
   .via-card--silver .via-rank { color: #d5dbe2; }
   .via-card--bronze .via-rank { color: #e0a36a; }
   .via-card--post .via-card__body { padding: 4px 0 0; display: grid; gap: 12px; }
@@ -315,24 +373,20 @@ ${displayOverride}
     display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; min-height: 300px;
     object-fit: cover; border: 0;
   }
-  .via-thumb .via-rank {
-    position: absolute; left: 12px; top: 10px;
-    font-size: 4.5rem; line-height: 0.85; color: #f2f2f2;
-    text-shadow: 0 2px 16px rgba(0,0,0,0.85);
+  .via-rank, .via-points__n, .via-delta {
+    font-family: var(--via-font-ui), "Instrument Sans", sans-serif;
+    font-weight: 400; font-style: normal; font-synthesis: none;
   }
-  .via-delta {
-    position: absolute; right: 12px; top: 14px;
-    font-family: var(--via-font-ui); font-size: 14px; font-weight: 400;
-    letter-spacing: 0.04em;
-  }
+  .via-rank { font-size: 1.75rem; line-height: 1; letter-spacing: 0.04em; }
+  .via-delta { font-size: 14px; letter-spacing: 0.04em; }
   .via-delta--up { color: #7cff77; }
   .via-delta--down { color: #ff5a1f; }
   .via-points { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; width: 100%; }
-  .via-points__n { font-family: var(--via-font-display); font-size: 1.35rem; letter-spacing: 0.04em; }
+  .via-points__n { font-size: 1.35rem; letter-spacing: 0.04em; }
   .via-points__likes { color: var(--via-muted); font-size: 12px; }
   .via-bar { display: block; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
   .via-bar__fill { display: block; height: 100%; background: #ff5a1f; }
-  .via-card--gold .via-bar__fill { background: #e6c15a; }
+  .via-card--gold .via-bar__fill { background: #7cff77; }
   .via-card--silver .via-bar__fill { background: #c5ccd4; }
   .via-card--bronze .via-bar__fill { background: #c9844a; }
   .via-thumb--hero { border-radius: 16px; }
@@ -360,10 +414,11 @@ ${displayOverride}
 <body class="via-field" id="top">
   <div class="via-shell">
     <header class="via-nav">
-      <a class="via-nav__brand" href="/">${caps('Via')}</a>
+      <a class="via-nav__brand" href="/"><img class="via-logo" src="/via-discord-icon-512.png" alt="" width="28" height="28">${caps('Via')}</a>
       <nav>
         <ul class="via-nav__links">
-          <li><a href="/" ${active === 'bar' ? 'aria-current="page" class="is-active"' : ''}>Bar</a></li>
+          <li><a href="/" ${active === 'builds' ? 'aria-current="page" class="is-active"' : ''}>Builds</a></li>
+          <li><a href="/builders" ${active === 'builders' ? 'aria-current="page" class="is-active"' : ''}>Builders</a></li>
           <li><a href="/p/new" ${active === 'new' ? 'aria-current="page" class="is-active"' : ''}>Submit</a></li>
           <li><a href="/me" ${active === 'me' ? 'aria-current="page" class="is-active"' : ''}>Me</a></li>
         </ul>

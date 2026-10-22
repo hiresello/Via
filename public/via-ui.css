@@ -224,6 +224,9 @@
 }
 
 .via-nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--via-font-display);
   font-weight: 400;
   font-synthesis: none;
@@ -232,6 +235,13 @@
   text-transform: uppercase;
   color: var(--via-accent);
   text-decoration: none;
+}
+
+.via-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  display: block;
 }
 
 .via-nav__links {
@@ -315,7 +325,7 @@
 }
 
 .via-rank {
-  font-family: var(--via-font-display);
+  font-family: var(--via-font-ui);
   font-weight: 400;
   font-synthesis: none;
   font-size: 1.25rem;

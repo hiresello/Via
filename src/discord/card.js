@@ -25,7 +25,7 @@ export function projectCard(row) {
     url: `${publicUrl()}/p/${encodeURIComponent(project.id)}`,
     image: thumb ? { url: thumb } : undefined,
     fields: [
-      { name: 'Bar', value: row.reason || 'null', inline: false },
+      { name: 'Builds', value: row.reason || 'null', inline: false },
       {
         name: 'Score',
         value: `${row.score ?? '—'} · likes ${row.likes ?? 0}${row.capped ? ' · capped' : ''}`,

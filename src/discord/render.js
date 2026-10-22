@@ -64,7 +64,7 @@ export function apestronPublicName(filePath = resolveApestronPath()) {
  */
 export function displayFontFace(urlPrefix = '/fonts/') {
   return [
-    `@font-face { font-family: "${APE_FAMILY}"; src: url("${urlPrefix}Apestron.otf") format("opentype"); font-weight: 400; font-style: normal; font-display: block; }`,
+    `@font-face { font-family: "${APE_FAMILY}"; src: url("${urlPrefix}Apestron.otf") format("opentype"); font-weight: 400; font-style: normal; font-display: swap; }`,
     `@font-face { font-family: "${UI_FAMILY}"; src: url("${urlPrefix}InstrumentSans-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }`,
   ].join('\n');
 }
@@ -73,7 +73,8 @@ export function displayFontFace(urlPrefix = '/fonts/') {
 export function displayStackCss() {
   return `:root { --via-font-display: "${APE_FAMILY}"; --via-font-ui: "${UI_FAMILY}"; --via-font-mono: "${UI_FAMILY}"; }
 html { font-synthesis: none; }
-.via-display, .via-rank, .via-nav__brand { font-family: "${APE_FAMILY}"; font-weight: 400; font-style: normal; font-synthesis: none; }`;
+.via-display, .via-nav__brand { font-family: "${APE_FAMILY}", "${UI_FAMILY}", sans-serif; font-weight: 400; font-style: normal; font-synthesis: none; }
+.via-rank, .via-points__n, .via-delta { font-family: "${UI_FAMILY}", sans-serif; font-weight: 400; font-style: normal; font-synthesis: none; }`;
 }
 
 export function cardHtml(row) {

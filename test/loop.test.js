@@ -10,7 +10,7 @@ import { openOntology } from '../src/ontology.js';
 import { RANK_INSTRUCTIONS, rankProjects } from '../src/ranker.js';
 import { readSeedDocument, seedOntology } from '../src/seed.js';
 import { likeProject, presentBoard, rankBoard } from '../src/service.js';
-import { renderBoard, renderPrivacy, renderProject, renderTerms } from '../src/web/html.js';
+import { renderBoard, renderBuilders, renderPrivacy, renderProject, renderTerms } from '../src/web/html.js';
 import { rootDir } from '../src/paths.js';
 import { slug } from '../src/slug.js';
 
@@ -127,6 +127,18 @@ test('seed → rank → like moves a clearing project, a pathless project stays 
   assert.equal((html.match(/like-btn/g) || []).length, moved.rows.length);
   assert.doesNotMatch(html, /<select name="signal"/);
   assert.match(html, /via-thumb/);
+  assert.match(html, />Builds</);
+  assert.match(html, />Builders</);
+  assert.doesNotMatch(html, />Bar</);
+  assert.match(html, /via-discord-icon-512\.png/);
+  assert.match(html, /\.via-rank,\s*\.via-points__n,\s*\.via-delta\s*\{[^}]*font-family:\s*var\(--via-font-ui\)/);
+  assert.doesNotMatch(html, /NO GLYPH/);
+  assert.doesNotMatch(html, /minmax\(240px,\s*320px\)/);
+  assert.doesNotMatch(html, /max-width:\s*320px/);
+  const buildersPage = renderBuilders(moved);
+  assert.match(buildersPage, />Builders</);
+  assert.match(buildersPage, /via-person/);
+  assert.doesNotMatch(buildersPage, /NO GLYPH/);
   assert.ok((html.match(/class="via-thumb"/g) || []).length >= moved.rows.length);
   for (const row of moved.rows) {
     assert.match(html, new RegExp(`/thumbs/${row.project.id.replace(/^prj_/, '')}\\.png`));
@@ -287,6 +299,62 @@ test('System One scores cannot lift a pathless project over a path', async () =>
     assert.equal(capped.capped, true);
     assert.ok(capped.score <= 39);
   } finally {
+    if (previous == null) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = previous;
+  }
+});
+
+test('rankBoard scores through systemone, caches, and stubs only after an error', async () => {
+  const previous = process.env.OPENROUTER_API_KEY;
+  process.env.OPENROUTER_API_KEY = 'test-key-not-real';
+  const db = path.join(os.tmpdir(), `via-cache-${Date.now()}.sqlite`);
+  const ontology = openOntology(db);
+  const doc = readSeedDocument().slice(0, 1);
+  await seedOntology(ontology, doc);
+  let calls = 0;
+  const fetchImpl = async (url, init) => {
+    calls += 1;
+    assert.match(String(url), /\/api\/v1\/systemone$/);
+    const body = JSON.parse(init.body);
+    assert.equal(body.model, 'microsoft/microsoft-decision-1');
+    const answers = {};
+    for (const id of Object.keys(body.questions || {})) answers[id] = { type: 'score', score: 0.8 };
+    return {
+      status: 200,
+      ok: true,
+      text: async () => JSON.stringify({ model: 'microsoft/microsoft-decision-1', answers }),
+    };
+  };
+  try {
+    const first = await rankBoard(ontology, { fetchImpl });
+    assert.equal(first.model, 'microsoft/microsoft-decision-1');
+    assert.equal(calls, 1);
+    const second = await rankBoard(ontology, { fetchImpl });
+    assert.equal(second.rows[0].project.id, first.rows[0].project.id);
+    assert.equal(calls, 1);
+
+    const broken = openOntology(path.join(os.tmpdir(), `via-cache-err-${Date.now()}.sqlite`));
+    await seedOntology(broken, doc);
+    let fails = 0;
+    const failed = await rankBoard(broken, {
+      fetchImpl: async () => {
+        fails += 1;
+        throw new Error('systemone down');
+      },
+    });
+    assert.equal(failed.model, 'stub');
+    assert.match(failed.model_error || '', /systemone down/);
+    await rankBoard(broken, {
+      fetchImpl: async () => {
+        fails += 1;
+        throw new Error('systemone down');
+      },
+    });
+    assert.equal(fails, 1);
+    broken.close();
+  } finally {
+    ontology.close();
+    fs.rmSync(db, { force: true });
     if (previous == null) delete process.env.OPENROUTER_API_KEY;
     else process.env.OPENROUTER_API_KEY = previous;
   }

@@ -1,16 +1,38 @@
+import { OPENROUTER_MODEL } from './decision.js';
 import { rankProjects } from './ranker.js';
 import { slug } from './slug.js';
 import { generateProjectThumb, thumbAbsoluteUrl, thumbFileName } from './thumb.js';
 
+export function boardSignature(ontology) {
+  const projects = ontology.query({ type: 'Project' }).map((row) => row.id).sort();
+  const likes = ontology.query({ type: 'Like' })
+    .filter((row) => !row.retracted)
+    .map((row) => `${row.project_id}:${row.signal || 'like'}`)
+    .sort();
+  return `${projects.join(',')}|${likes.join(',')}`;
+}
+
 export async function rankBoard(ontology, opts = {}) {
+  const signature = boardSignature(ontology);
+  const wantModel = !opts.forceStub && Boolean(process.env.OPENROUTER_API_KEY);
+  const cached = latestSnapshot(ontology);
+  if (cached && cached.cache_key === signature) {
+    const modelHit = cached.model === OPENROUTER_MODEL;
+    const stubHit = cached.model === 'stub' && (!wantModel || cached.model_error);
+    if (modelHit || stubHit) return presentBoard(ontology);
+  }
   const projects = ontology.query({ type: 'Project' });
-  const ranked = await rankProjects(ontology, projects, opts);
+  const ranked = await rankProjects(ontology, projects, {
+    ...opts,
+    forceStub: opts.forceStub || !process.env.OPENROUTER_API_KEY,
+  });
   ontology.write({
     type: 'RankSnapshot',
     id: `rank_${Date.now()}_${String(snapshotSeq()).padStart(4, '0')}`,
     model: ranked.model,
     chosen_by: ranked.chosen_by,
     model_error: ranked.model_error ?? null,
+    cache_key: signature,
     ordered: ranked.ordered.map((row, index) => ({
       project_id: row.project_id,
       score: row.score,
@@ -216,6 +238,11 @@ export function presentBoard(ontology) {
     snapshot,
     rows,
   };
+}
+
+function latestSnapshot(ontology) {
+  return ontology.query({ type: 'RankSnapshot' })
+    .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id))[0] || null;
 }
 
 let snapshotCount = 0;
