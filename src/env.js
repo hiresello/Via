@@ -1,6 +1,11 @@
 import fs from 'node:fs';
 
-/** Load .env without overriding variables already set. No dotenv dependency. */
+/**
+ * Load .env without overriding variables the host already set.
+ * No dotenv dependency. An empty file value must not blank a real key:
+ * Vercel injects OPENROUTER_API_KEY before boot, and a shipped `.env`
+ * often has `OPENROUTER_API_KEY=`.
+ */
 export function loadEnv(file = '.env') {
   if (!fs.existsSync(file)) return;
   const text = fs.readFileSync(file, 'utf8');
@@ -17,6 +22,10 @@ export function loadEnv(file = '.env') {
     ) {
       value = value.slice(1, -1);
     }
-    if (process.env[key] === undefined) process.env[key] = value;
+    if (!key) continue;
+    const existing = process.env[key];
+    if (existing != null && String(existing).trim() !== '') continue;
+    if (!String(value || '').trim()) continue;
+    process.env[key] = value;
   }
 }

@@ -1,4 +1,7 @@
-import { OPENROUTER_MODEL } from './decision.js';
+import path from 'node:path';
+import { hasOpenRouterKey, OPENROUTER_MODEL } from './decision.js';
+import { loadEnv } from './env.js';
+import { rootDir } from './paths.js';
 import { rankProjects } from './ranker.js';
 import { slug } from './slug.js';
 import { generateProjectThumb, thumbAbsoluteUrl, thumbFileName } from './thumb.js';
@@ -13,18 +16,21 @@ export function boardSignature(ontology) {
 }
 
 export async function rankBoard(ontology, opts = {}) {
+  loadEnv(path.join(rootDir, '.env'));
   const signature = boardSignature(ontology);
-  const wantModel = !opts.forceStub && Boolean(process.env.OPENROUTER_API_KEY);
+  const wantModel = !opts.forceStub && hasOpenRouterKey();
   const cached = latestSnapshot(ontology);
   if (cached && cached.cache_key === signature) {
-    const modelHit = cached.model === OPENROUTER_MODEL;
-    const stubHit = cached.model === 'stub' && (!wantModel || cached.model_error);
-    if (modelHit || stubHit) return presentBoard(ontology);
+    // A successful System One score for this signature is the only durable hit.
+    // A stub from a missing-key boot, or one written with model_error, is this
+    // response's fallback — the next request retries while the key is set.
+    if (wantModel && cached.model === OPENROUTER_MODEL) return presentBoard(ontology);
+    if (!wantModel && cached.model === 'stub') return presentBoard(ontology);
   }
   const projects = ontology.query({ type: 'Project' });
   const ranked = await rankProjects(ontology, projects, {
     ...opts,
-    forceStub: opts.forceStub || !process.env.OPENROUTER_API_KEY,
+    forceStub: opts.forceStub || !hasOpenRouterKey(),
   });
   ontology.write({
     type: 'RankSnapshot',
@@ -234,7 +240,7 @@ export function presentBoard(ontology) {
   return {
     model: snapshot?.model || null,
     chosen_by: snapshot?.chosen_by || null,
-    model_error: snapshot?.model_error || null,
+    model_error: snapshot?.model_error ?? null,
     snapshot,
     rows,
   };
