@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
+import { hasOpenRouterKey } from './decision.js';
 import { loadEnv } from './env.js';
 import { dbPath, rootDir } from './paths.js';
 import { openOntology } from './ontology.js';
@@ -11,7 +12,7 @@ import { handle } from './web/server.js';
 loadEnv(path.join(rootDir, '.env'));
 
 const command = process.argv[2] || 'demo';
-const forceStub = !process.env.OPENROUTER_API_KEY;
+const forceStub = !hasOpenRouterKey();
 
 if (command === 'demo') {
   const file = dbPath();

@@ -1,10 +1,11 @@
 import path from 'node:path';
 import { Client, Events, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { hasOpenRouterKey } from '../decision.js';
 import { loadEnv } from '../env.js';
 import { rootDir, dbPath } from '../paths.js';
 import { openOntology } from '../ontology.js';
 import { seedOntology } from '../seed.js';
-import { likeProject, presentBoard, rankBoard, ensurePerson } from '../service.js';
+import { likeProject, rankBoard, ensurePerson } from '../service.js';
 import { projectCard } from './card.js';
 import { bannerHtml, cardHtml, renderHtmlToPng } from './render.js';
 
@@ -97,7 +98,7 @@ client.on('interactionCreate', async (interaction) => {
         userId: person.id,
         projectId,
         signal: 'like',
-      }, { forceStub: !process.env.OPENROUTER_API_KEY });
+      }, { forceStub: !hasOpenRouterKey() });
       const row = board.rows.find((item) => item.project.id === projectId);
       if (!row) return;
       const payload = projectCard(row);
@@ -115,10 +116,7 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 async function ensureRanked() {
-  if (!ontology.query({ type: 'RankSnapshot' }).length) {
-    await rankBoard(ontology, { forceStub: !process.env.OPENROUTER_API_KEY });
-  }
-  return presentBoard(ontology);
+  return rankBoard(ontology, { forceStub: !hasOpenRouterKey() });
 }
 
 async function sendCard(interaction, row, edit) {

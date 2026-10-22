@@ -9,17 +9,37 @@ export const OPENROUTER_MODEL = 'microsoft/microsoft-decision-1';
 export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/systemone';
 export const OPENROUTER_DECISIONS_URL = 'https://openrouter.ai/api/v1/api/alpha/decisions';
 
+/** Host and .env both count. Whitespace and a blank assignment do not. */
 export function hasOpenRouterKey() {
-  return Boolean(process.env.OPENROUTER_API_KEY?.trim());
+  return Boolean(String(process.env.OPENROUTER_API_KEY || '').trim());
 }
 
+/** Questions are a map of id → question. An array is rejected by System One. */
+export function isQuestionRecord(questions) {
+  return Boolean(questions) && typeof questions === 'object' && !Array.isArray(questions);
+}
+
+const DECISION_TIMEOUT_MS = 45_000;
+
 export async function decide({ state, questions, fetchImpl = fetch }) {
-  const key = process.env.OPENROUTER_API_KEY?.trim();
+  const key = String(process.env.OPENROUTER_API_KEY || '').trim();
   if (!key) {
-    return { model: 'stub', answers: null, skipped: 'no OPENROUTER_API_KEY', rejected: null };
+    return {
+      model: 'stub',
+      answers: null,
+      skipped: 'no OPENROUTER_API_KEY',
+      rejected: null,
+      error: 'no OPENROUTER_API_KEY',
+    };
   }
-  if (!questions || typeof questions !== 'object') {
-    return { model: 'stub', answers: null, skipped: null, rejected: null, error: 'decide requires questions' };
+  if (!isQuestionRecord(questions)) {
+    return {
+      model: 'stub',
+      answers: null,
+      skipped: null,
+      rejected: null,
+      error: 'questions must be a record',
+    };
   }
   const primary = await postDecision(OPENROUTER_URL, { state, questions, key, fetchImpl });
   if (primary.notFound) {
@@ -37,11 +57,22 @@ export async function decide({ state, questions, fetchImpl = fetch }) {
   return primary.result;
 }
 
+function redact(message) {
+  const key = String(process.env.OPENROUTER_API_KEY || '').trim();
+  let text = String(message || 'OpenRouter request failed');
+  if (key) text = text.split(key).join('[redacted]');
+  return text.slice(0, 300);
+}
+
 async function postDecision(url, { state, questions, key, fetchImpl }) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), DECISION_TIMEOUT_MS);
+  if (typeof timer.unref === 'function') timer.unref();
   let response;
   try {
     response = await fetchImpl(url, {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         Authorization: `Bearer ${key}`,
         'Content-Type': 'application/json',
@@ -55,10 +86,16 @@ async function postDecision(url, { state, questions, key, fetchImpl }) {
       }),
     });
   } catch (error) {
+    const timedOut = error?.name === 'AbortError' || error?.name === 'TimeoutError';
+    const message = timedOut
+      ? `OpenRouter timed out after ${DECISION_TIMEOUT_MS}ms`
+      : redact(error?.message);
     return {
       notFound: false,
-      result: { model: 'stub', answers: null, skipped: null, rejected: null, error: error.message },
+      result: { model: 'stub', answers: null, skipped: null, rejected: null, error: message },
     };
+  } finally {
+    clearTimeout(timer);
   }
   const text = await response.text();
   if (response.status === 404) return { notFound: true, result: null };
@@ -70,7 +107,7 @@ async function postDecision(url, { state, questions, key, fetchImpl }) {
         answers: null,
         skipped: null,
         rejected: null,
-        error: `OpenRouter ${response.status}: ${text.slice(0, 300)}`,
+        error: redact(`OpenRouter ${response.status}: ${text.slice(0, 300)}`),
       },
     };
   }

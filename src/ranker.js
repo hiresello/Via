@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { decide, OPENROUTER_MODEL } from './decision.js';
+import { decide, hasOpenRouterKey, OPENROUTER_MODEL } from './decision.js';
 
 /**
  * Plan §10 relevance stack. System One scores each project against these
@@ -67,6 +67,12 @@ export const SCORE_LEVELS = [
 
 /** Capped projects sit at or below this. Clearing projects start above it. */
 export const CAP = 39;
+
+/**
+ * One System One call per batch. 38 score questions in a single POST
+ * outlives a Vercel function; each batch is still a questions record.
+ */
+const SCORE_BATCH = 8;
 const LIKE_UNIT = 5;
 const SIGNAL_WEIGHT = { want_to_join: 3, cool_idea: 2, like: 1 };
 
@@ -119,7 +125,8 @@ export function scoreProject(project, { likes = [], priors = 0 } = {}) {
 }
 
 export async function rankProjects(ontology, projects, opts = {}) {
-  const forceStub = opts.forceStub || !process.env.OPENROUTER_API_KEY;
+  const keyPresent = hasOpenRouterKey();
+  const forceStub = opts.forceStub || !keyPresent;
   const likes = ontology.query({ type: 'Like' }).filter((row) => !row.retracted);
   const all = projects.map((project) => ({
     project,
@@ -128,7 +135,7 @@ export async function rankProjects(ontology, projects, opts = {}) {
   }));
 
   if (forceStub) {
-    return finish('stub', 'stub', null, all.map((row) => stubRow(row)));
+    return finish('stub', 'stub', keyPresent ? null : 'no OPENROUTER_API_KEY', all.map((row) => stubRow(row)));
   }
 
   try {
@@ -142,30 +149,18 @@ export async function rankProjects(ontology, projects, opts = {}) {
       else ask.push({ row, hash });
     }
     if (ask.length) {
-      const questions = {};
-      for (const { row } of ask) {
-        questions[row.project.id] = {
-          type: 'score',
-          instructions: 'Score this project on the rubric in state.rubric. Use only the card in state. Higher means a stranger can see a real slice finished under this event’s clock.',
-          criteria: SCORE_LEVELS,
-        };
-      }
-      const decision = await decide({
-        state: {
-          rubric: RANK_INSTRUCTIONS,
-          projects: ask.map(({ row }) => stateFor(row)),
-          note: 'Likes are conviction. They reorder only when path, clock, and hard part already clear. Cap any project missing a runnable path, the event clock, or a finished core.',
-        },
-        questions,
-        fetchImpl: opts.fetchImpl,
-      });
-      if (decision.model !== OPENROUTER_MODEL) {
-        const note = decision.rejected || decision.error || decision.skipped || 'microsoft/microsoft-decision-1 unavailable';
-        return finish('stub', 'stub', note, all.map((row) => stubRow(row)));
+      const decisions = await Promise.all(chunk(ask.map(({ row }) => row), SCORE_BATCH).map((batch) => scoreBatch(batch, opts)));
+      const got = {};
+      for (const decision of decisions) {
+        if (decision.model !== OPENROUTER_MODEL) {
+          const note = decision.rejected || decision.error || decision.skipped || 'microsoft/microsoft-decision-1 unavailable';
+          return finish('stub', 'stub', note, all.map((row) => stubRow(row)));
+        }
+        if (decision.answers && typeof decision.answers === 'object') Object.assign(got, decision.answers);
       }
       const ts = new Date().toISOString();
       for (const { row, hash } of ask) {
-        const answer = decision.answers?.[row.project.id];
+        const answer = got[row.project.id];
         if (mapModelScore(answer) == null) continue;
         answers[row.project.id] = answer;
         ontology.write?.({ type: 'ModelScore', id: modelScoreId(row.project.id), project_id: row.project.id, model: OPENROUTER_MODEL, hash, answer, ts });
@@ -190,6 +185,32 @@ function stateHash(row) {
   return crypto.createHash('sha256')
     .update(JSON.stringify([OPENROUTER_MODEL, RANK_INSTRUCTIONS, SCORE_LEVELS, stateFor(row)]))
     .digest('hex');
+}
+
+function scoreBatch(batch, opts) {
+  const questions = {};
+  for (const row of batch) {
+    questions[row.project.id] = {
+      type: 'score',
+      instructions: 'Score this project on the rubric in state.rubric. Use only the card in state. Higher means a stranger can see a real slice finished under this event’s clock.',
+      criteria: SCORE_LEVELS,
+    };
+  }
+  return decide({
+    state: {
+      rubric: RANK_INSTRUCTIONS,
+      projects: batch.map((row) => stateFor(row)),
+      note: 'Likes are conviction. They reorder only when path, clock, and hard part already clear. Cap any project missing a runnable path, the event clock, or a finished core.',
+    },
+    questions,
+    fetchImpl: opts.fetchImpl,
+  });
+}
+
+function chunk(rows, size) {
+  const out = [];
+  for (let i = 0; i < rows.length; i += size) out.push(rows.slice(i, i + size));
+  return out;
 }
 
 function finish(model, chosenBy, modelError, rows) {

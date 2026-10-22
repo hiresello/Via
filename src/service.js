@@ -1,10 +1,10 @@
-import { OPENROUTER_MODEL } from './decision.js';
+import path from 'node:path';
+import { hasOpenRouterKey, OPENROUTER_MODEL } from './decision.js';
+import { loadEnv } from './env.js';
+import { rootDir } from './paths.js';
 import { rankProjects } from './ranker.js';
 import { slug } from './slug.js';
 import { generateProjectThumb, thumbAbsoluteUrl, thumbFileName } from './thumb.js';
-
-/** After a System One error, serve the stub snapshot for this long before asking again. */
-const ERROR_RETRY_MS = 10 * 60 * 1000;
 
 export function boardSignature(ontology) {
   const projects = ontology.query({ type: 'Project' }).map((row) => row.id).sort();
@@ -16,19 +16,21 @@ export function boardSignature(ontology) {
 }
 
 export async function rankBoard(ontology, opts = {}) {
+  loadEnv(path.join(rootDir, '.env'));
   const signature = boardSignature(ontology);
-  const wantModel = !opts.forceStub && Boolean(process.env.OPENROUTER_API_KEY);
+  const wantModel = !opts.forceStub && hasOpenRouterKey();
   const cached = latestSnapshot(ontology);
   if (cached && cached.cache_key === signature) {
-    const modelHit = cached.model === OPENROUTER_MODEL;
-    const recentError = cached.model_error && Date.now() - Date.parse(cached.created_at) < ERROR_RETRY_MS;
-    const stubHit = cached.model === 'stub' && (!wantModel || recentError);
-    if (modelHit || stubHit) return presentBoard(ontology);
+    // A System One success for this signature is durable. A stub is reused only
+    // when no key is set; after an error the next request retries (unchanged
+    // projects are still served from their ModelScore cache).
+    if (wantModel && cached.model === OPENROUTER_MODEL) return presentBoard(ontology);
+    if (!wantModel && cached.model === 'stub') return presentBoard(ontology);
   }
   const projects = ontology.query({ type: 'Project' });
   const ranked = await rankProjects(ontology, projects, {
     ...opts,
-    forceStub: opts.forceStub || !process.env.OPENROUTER_API_KEY,
+    forceStub: opts.forceStub || !hasOpenRouterKey(),
   });
   ontology.write({
     type: 'RankSnapshot',
@@ -261,7 +263,7 @@ export function presentBoard(ontology) {
   return {
     model: snapshot?.model || null,
     chosen_by: snapshot?.chosen_by || null,
-    model_error: snapshot?.model_error || null,
+    model_error: snapshot?.model_error ?? null,
     snapshot,
     rows,
   };

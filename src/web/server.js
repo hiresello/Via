@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { hasOpenRouterKey } from '../decision.js';
 import { loadEnv } from '../env.js';
 import { dbPath, publicUrl, rootDir } from '../paths.js';
 import { openOntology } from '../ontology.js';
@@ -29,11 +30,18 @@ export async function getOntology() {
   return ontology;
 }
 
+let boardRank = null;
+
 export async function bootBoard() {
+  loadEnv(path.join(rootDir, '.env'));
   const ont = await getOntology();
-  if (ont.query({ type: 'Project' }).length) {
-    await rankBoard(ont, { forceStub: !process.env.OPENROUTER_API_KEY });
+  if (!ont.query({ type: 'Project' }).length) return presentBoard(ont);
+  if (!boardRank) {
+    boardRank = rankBoard(ont, { forceStub: !hasOpenRouterKey() }).finally(() => {
+      boardRank = null;
+    });
   }
+  await boardRank;
   return presentBoard(ont);
 }
 
@@ -72,7 +80,7 @@ export async function handle(req, res) {
     if (req.method === 'POST' && url.pathname === '/p/new') {
       const body = await readBody(req);
       try {
-        const board = await submitProject(await getOntology(), body, { forceStub: !process.env.OPENROUTER_API_KEY });
+        const board = await submitProject(await getOntology(), body, { forceStub: !hasOpenRouterKey() });
         const posted = board.rows.find((row) => row.project.title === String(body.title || '').trim());
         return redirect(res, posted ? `/p/${encodeURIComponent(posted.project.id)}` : '/');
       } catch (error) {
@@ -102,7 +110,7 @@ export async function handle(req, res) {
         const person = saveProfile(ont, body);
         res.setHeader('Set-Cookie', `via_name=${encodeURIComponent(person.display_name)}; Path=/; Max-Age=31536000; SameSite=Lax`);
         if (body.like && ont.query({ type: 'Project' }).some((row) => row.id === body.like)) {
-          await likeProject(ont, { userId: person.id, projectId: body.like, signal: 'like' }, { forceStub: !process.env.OPENROUTER_API_KEY });
+          await likeProject(ont, { userId: person.id, projectId: body.like, signal: 'like' }, { forceStub: !hasOpenRouterKey() });
         }
         return redirect(res, safeNext(body.next) || `/me?id=${encodeURIComponent(person.id)}`);
       } catch (error) {
@@ -124,7 +132,7 @@ export async function handle(req, res) {
         userId: person.id,
         projectId: body.project_id,
         signal: body.signal || 'like',
-      }, { forceStub: !process.env.OPENROUTER_API_KEY });
+      }, { forceStub: !hasOpenRouterKey() });
       return redirect(res, next);
     }
     if (req.method === 'GET' && url.pathname === '/api/board') {
@@ -133,7 +141,7 @@ export async function handle(req, res) {
       return json(res, {
         model: board.model,
         chosen_by: board.chosen_by,
-        model_error: board.model_error,
+        model_error: board.model_error ?? null,
         rows: board.rows.map((row) => ({
           rank: row.rank,
           delta: row.delta,
@@ -294,6 +302,8 @@ if (isMain && !process.env.VERCEL) {
     console.log(`Via leaderboard http://127.0.0.1:${port}/`);
   });
 }
+
+export const config = { maxDuration: 60 };
 
 export default function vercelHandler(req, res) {
   return handle(req, res);

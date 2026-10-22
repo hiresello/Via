@@ -4,13 +4,15 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { decide, OPENROUTER_MODEL, OPENROUTER_URL } from '../src/decision.js';
+import { loadEnv } from '../src/env.js';
 import { EMBED_COLOR, projectCard } from '../src/discord/card.js';
 import { cardHtml } from '../src/discord/render.js';
 import { openOntology } from '../src/ontology.js';
 import { RANK_INSTRUCTIONS, rankProjects } from '../src/ranker.js';
 import { readSeedDocument, seedOntology } from '../src/seed.js';
 import { likeProject, presentBoard, rankBoard } from '../src/service.js';
-import { renderBoard, renderPrivacy, renderProject, renderTerms } from '../src/web/html.js';
+import { renderBoard, renderBuilders, renderPrivacy, renderProject, renderTerms } from '../src/web/html.js';
+import { handle } from '../src/web/server.js';
 import { rootDir } from '../src/paths.js';
 import { slug } from '../src/slug.js';
 
@@ -332,18 +334,20 @@ test('BUILDS + BUILDERS pages: logo, favicon, medals, no BAR label, cached Syste
   const fetchImpl = async (url, init) => {
     calls += 1;
     const body = JSON.parse(init.body);
-    asked = Object.keys(body.questions).length;
+    asked += Object.keys(body.questions).length;
     const answers = Object.fromEntries(Object.keys(body.questions).map((id) => [id, { type: 'score', score: 0.5 }]));
     return { status: 200, ok: true, text: async () => JSON.stringify({ model: OPENROUTER_MODEL, answers }) };
   };
   try {
     const first = await rankProjects(ontology, ontology.query({ type: 'Project' }), { fetchImpl });
     assert.equal(first.model, OPENROUTER_MODEL);
-    assert.equal(calls, 1);
-    assert.equal(asked, ontology.query({ type: 'Project' }).length);
+    const total = ontology.query({ type: 'Project' }).length;
+    assert.equal(asked, total);
+    const batches = calls;
+    assert.equal(batches, Math.ceil(total / 8));
     const second = await rankProjects(ontology, ontology.query({ type: 'Project' }), { fetchImpl });
     assert.equal(second.model, OPENROUTER_MODEL);
-    assert.equal(calls, 1, 'unchanged projects are served from the ModelScore cache');
+    assert.equal(calls, batches, 'unchanged projects are served from the ModelScore cache');
     const failing = async () => ({ status: 500, ok: false, text: async () => 'boom' });
     const changed = ontology.query({ type: 'Project' })[0];
     ontology.write({ ...changed, one_liner: `${changed.one_liner || ''} (edited)` });
@@ -356,9 +360,9 @@ test('BUILDS + BUILDERS pages: logo, favicon, medals, no BAR label, cached Syste
   }
 });
 
-test('rankBoard scores through systemone, caches, and stubs only after an error', async () => {
+test('rankBoard scores through systemone, caches a success, and retries a stub', async () => {
   const previous = process.env.OPENROUTER_API_KEY;
-  process.env.OPENROUTER_API_KEY = 'test-key-not-real';
+  delete process.env.OPENROUTER_API_KEY;
   const db = path.join(os.tmpdir(), `via-cache-${Date.now()}.sqlite`);
   const ontology = openOntology(db);
   const doc = readSeedDocument().slice(0, 1);
@@ -366,9 +370,12 @@ test('rankBoard scores through systemone, caches, and stubs only after an error'
   let calls = 0;
   const fetchImpl = async (url, init) => {
     calls += 1;
-    assert.match(String(url), /\/api\/v1\/systemone$/);
+    assert.equal(url, OPENROUTER_URL);
     const body = JSON.parse(init.body);
     assert.equal(body.model, 'microsoft/microsoft-decision-1');
+    assert.equal(Array.isArray(body.questions), false);
+    assert.equal(typeof body.questions, 'object');
+    assert.ok(body.questions && !Array.isArray(body.questions));
     const answers = {};
     for (const id of Object.keys(body.questions || {})) answers[id] = { type: 'score', score: 0.8 };
     return {
@@ -377,15 +384,23 @@ test('rankBoard scores through systemone, caches, and stubs only after an error'
       text: async () => JSON.stringify({ model: 'microsoft/microsoft-decision-1', answers }),
     };
   };
+  const errDb = path.join(os.tmpdir(), `via-cache-err-${Date.now()}.sqlite`);
   try {
+    const missing = await rankBoard(ontology, { fetchImpl });
+    assert.equal(missing.model, 'stub');
+    assert.equal(calls, 0);
+
+    process.env.OPENROUTER_API_KEY = 'test-key-not-real';
     const first = await rankBoard(ontology, { fetchImpl });
     assert.equal(first.model, 'microsoft/microsoft-decision-1');
+    assert.equal(first.model_error, null);
     assert.equal(calls, 1);
     const second = await rankBoard(ontology, { fetchImpl });
     assert.equal(second.rows[0].project.id, first.rows[0].project.id);
+    assert.equal(second.model_error, null);
     assert.equal(calls, 1);
 
-    const broken = openOntology(path.join(os.tmpdir(), `via-cache-err-${Date.now()}.sqlite`));
+    const broken = openOntology(errDb);
     await seedOntology(broken, doc);
     let fails = 0;
     const failed = await rankBoard(broken, {
@@ -396,18 +411,160 @@ test('rankBoard scores through systemone, caches, and stubs only after an error'
     });
     assert.equal(failed.model, 'stub');
     assert.match(failed.model_error || '', /systemone down/);
-    await rankBoard(broken, {
+    const recovered = await rankBoard(broken, {
+      fetchImpl: async () => {
+        fails += 1;
+        return fetchImpl(OPENROUTER_URL, {
+          body: JSON.stringify({
+            model: 'microsoft/microsoft-decision-1',
+            questions: Object.fromEntries(broken.query({ type: 'Project' }).map((row) => [row.id, { type: 'score' }])),
+          }),
+        });
+      },
+    });
+    assert.equal(fails, 2);
+    assert.equal(recovered.model, 'microsoft/microsoft-decision-1');
+    assert.equal(recovered.model_error, null);
+    const held = await rankBoard(broken, {
       fetchImpl: async () => {
         fails += 1;
         throw new Error('systemone down');
       },
     });
-    assert.equal(fails, 1);
+    assert.equal(held.model, 'microsoft/microsoft-decision-1');
+    assert.equal(fails, 2);
     broken.close();
   } finally {
     ontology.close();
     fs.rmSync(db, { force: true });
+    fs.rmSync(errDb, { force: true });
     if (previous == null) delete process.env.OPENROUTER_API_KEY;
     else process.env.OPENROUTER_API_KEY = previous;
   }
 });
+
+test('loadEnv does not clobber an already-set OPENROUTER_API_KEY', () => {
+  const previous = process.env.OPENROUTER_API_KEY;
+  const file = path.join(os.tmpdir(), `via-env-${Date.now()}.env`);
+  fs.writeFileSync(file, 'OPENROUTER_API_KEY=\nOTHER_VIA_TEST=from-file\n');
+  const previousOther = process.env.OTHER_VIA_TEST;
+  try {
+    process.env.OPENROUTER_API_KEY = 'already-set';
+    delete process.env.OTHER_VIA_TEST;
+    loadEnv(file);
+    assert.equal(process.env.OPENROUTER_API_KEY, 'already-set');
+    assert.equal(process.env.OTHER_VIA_TEST, 'from-file');
+    delete process.env.OPENROUTER_API_KEY;
+    loadEnv(file);
+    assert.equal(process.env.OPENROUTER_API_KEY, undefined);
+  } finally {
+    fs.rmSync(file, { force: true });
+    if (previous == null) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = previous;
+    if (previousOther == null) delete process.env.OTHER_VIA_TEST;
+    else process.env.OTHER_VIA_TEST = previousOther;
+  }
+});
+
+test('decide does not POST when questions is not a record', async () => {
+  const previous = process.env.OPENROUTER_API_KEY;
+  process.env.OPENROUTER_API_KEY = 'test-key-not-real';
+  let calls = 0;
+  try {
+    const decision = await decide({
+      state: { ok: true },
+      questions: [{ type: 'score', instructions: 'no', criteria: ['a'] }],
+      fetchImpl: async () => {
+        calls += 1;
+        throw new Error('network');
+      },
+    });
+    assert.equal(calls, 0);
+    assert.equal(decision.model, 'stub');
+    assert.match(decision.error || '', /questions must be a record/);
+  } finally {
+    if (previous == null) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = previous;
+  }
+});
+
+test('GET /api/board includes model_error and retries a stub snapshot', async () => {
+  const previousKey = process.env.OPENROUTER_API_KEY;
+  const previousDb = process.env.VIA_DB_PATH;
+  const db = path.join(os.tmpdir(), `via-api-${Date.now()}-${Math.random().toString(16).slice(2)}.sqlite`);
+  process.env.VIA_DB_PATH = db;
+  delete process.env.OPENROUTER_API_KEY;
+  const seeded = openOntology(db);
+  await seedOntology(seeded, readSeedDocument().slice(0, 1));
+  seeded.close();
+  const originalFetch = globalThis.fetch;
+  let calls = 0;
+  let mode = 'fail';
+  globalThis.fetch = async (url, init) => {
+    calls += 1;
+    assert.equal(url, OPENROUTER_URL);
+    const body = JSON.parse(init.body);
+    assert.equal(body.model, OPENROUTER_MODEL);
+    assert.equal(Array.isArray(body.questions), false);
+    assert.equal(typeof body.questions, 'object');
+    assert.ok(Object.keys(body.questions).length > 0);
+    assert.ok(Object.keys(body.questions).length <= 8);
+    if (mode === 'fail') throw new Error('systemone down');
+    const answers = {};
+    for (const id of Object.keys(body.questions)) answers[id] = { type: 'score', score: 0.8 };
+    return {
+      status: 200,
+      ok: true,
+      text: async () => JSON.stringify({ model: 'microsoft/microsoft-decision-1', answers }),
+    };
+  };
+  try {
+    const first = await getBoard();
+    assert.equal(first.model, 'stub');
+    assert.equal(calls, 0);
+    assert.equal(first.model_error, 'no OPENROUTER_API_KEY');
+
+    process.env.OPENROUTER_API_KEY = 'test-key-not-real';
+    const failed = await getBoard();
+    assert.equal(failed.model, 'stub');
+    assert.match(failed.model_error || '', /systemone down/);
+    const failedCalls = calls;
+    assert.equal(failedCalls, 1);
+
+    const retried = await getBoard();
+    assert.equal(retried.model, 'stub');
+    assert.ok(calls > failedCalls);
+
+    mode = 'ok';
+    const scored = await getBoard();
+    assert.equal(scored.model, 'microsoft/microsoft-decision-1');
+    assert.equal(scored.model_error, null);
+    const scoredCalls = calls;
+    const cached = await getBoard();
+    assert.equal(cached.model, 'microsoft/microsoft-decision-1');
+    assert.equal(cached.model_error, null);
+    assert.equal(calls, scoredCalls);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousKey == null) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = previousKey;
+    if (previousDb == null) delete process.env.VIA_DB_PATH;
+    else process.env.VIA_DB_PATH = previousDb;
+    fs.rmSync(db, { force: true });
+    fs.rmSync(`${db}-wal`, { force: true });
+    fs.rmSync(`${db}-shm`, { force: true });
+  }
+});
+
+function getBoard() {
+  let status = 0;
+  let body = '';
+  const res = {
+    writeHead(code) { status = code; },
+    end(payload) { body = payload; },
+  };
+  return handle({ method: 'GET', url: '/api/board', headers: { host: '127.0.0.1' } }, res).then(() => {
+    assert.equal(status, 200);
+    return JSON.parse(body);
+  });
+}
