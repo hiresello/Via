@@ -10,11 +10,11 @@ export const OPENROUTER_URL = 'https://openrouter.ai/api/v1/systemone';
 export const OPENROUTER_DECISIONS_URL = 'https://openrouter.ai/api/v1/api/alpha/decisions';
 
 export function hasOpenRouterKey() {
-  return Boolean(process.env.OPENROUTER_API_KEY);
+  return Boolean(process.env.OPENROUTER_API_KEY?.trim());
 }
 
 export async function decide({ state, questions, fetchImpl = fetch }) {
-  const key = process.env.OPENROUTER_API_KEY;
+  const key = process.env.OPENROUTER_API_KEY?.trim();
   if (!key) {
     return { model: 'stub', answers: null, skipped: 'no OPENROUTER_API_KEY', rejected: null };
   }
