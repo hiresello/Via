@@ -31,8 +31,7 @@ export async function getOntology() {
 
 export async function bootBoard() {
   const ont = await getOntology();
-  const snaps = ont.query({ type: 'RankSnapshot' });
-  if (!snaps.length && ont.query({ type: 'Project' }).length) {
+  if (ont.query({ type: 'Project' }).length) {
     await rankBoard(ont, { forceStub: !process.env.OPENROUTER_API_KEY });
   }
   return presentBoard(ont);

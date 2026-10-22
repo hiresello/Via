@@ -350,3 +350,59 @@ test('BUILDS + BUILDERS pages: logo, favicon, medals, no BAR label, cached Syste
     else process.env.OPENROUTER_API_KEY = previous;
   }
 });
+
+test('rankBoard scores through systemone, caches, and stubs only after an error', async () => {
+  const previous = process.env.OPENROUTER_API_KEY;
+  process.env.OPENROUTER_API_KEY = 'test-key-not-real';
+  const db = path.join(os.tmpdir(), `via-cache-${Date.now()}.sqlite`);
+  const ontology = openOntology(db);
+  const doc = readSeedDocument().slice(0, 1);
+  await seedOntology(ontology, doc);
+  let calls = 0;
+  const fetchImpl = async (url, init) => {
+    calls += 1;
+    assert.match(String(url), /\/api\/v1\/systemone$/);
+    const body = JSON.parse(init.body);
+    assert.equal(body.model, 'microsoft/microsoft-decision-1');
+    const answers = {};
+    for (const id of Object.keys(body.questions || {})) answers[id] = { type: 'score', score: 0.8 };
+    return {
+      status: 200,
+      ok: true,
+      text: async () => JSON.stringify({ model: 'microsoft/microsoft-decision-1', answers }),
+    };
+  };
+  try {
+    const first = await rankBoard(ontology, { fetchImpl });
+    assert.equal(first.model, 'microsoft/microsoft-decision-1');
+    assert.equal(calls, 1);
+    const second = await rankBoard(ontology, { fetchImpl });
+    assert.equal(second.rows[0].project.id, first.rows[0].project.id);
+    assert.equal(calls, 1);
+
+    const broken = openOntology(path.join(os.tmpdir(), `via-cache-err-${Date.now()}.sqlite`));
+    await seedOntology(broken, doc);
+    let fails = 0;
+    const failed = await rankBoard(broken, {
+      fetchImpl: async () => {
+        fails += 1;
+        throw new Error('systemone down');
+      },
+    });
+    assert.equal(failed.model, 'stub');
+    assert.match(failed.model_error || '', /systemone down/);
+    await rankBoard(broken, {
+      fetchImpl: async () => {
+        fails += 1;
+        throw new Error('systemone down');
+      },
+    });
+    assert.equal(fails, 1);
+    broken.close();
+  } finally {
+    ontology.close();
+    fs.rmSync(db, { force: true });
+    if (previous == null) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = previous;
+  }
+});
