@@ -116,7 +116,7 @@ async function postDecision(url, { state, questions, key, fetchImpl }) {
         answers: null,
         skipped: null,
         rejected: null,
-        error: redact(`OpenRouter ${response.status}: ${text.slice(0, 300)}`),
+        error: redact(`OpenRouter ${response.status}: ${text.slice(0, 300)}${response.status === 401 && !key.startsWith('sk-or-') ? ' (OPENROUTER_API_KEY is set but is not an OpenRouter key; they start with sk-or-)' : ''}`),
       },
     };
   }
