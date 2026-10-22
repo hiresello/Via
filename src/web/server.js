@@ -6,9 +6,9 @@ import { loadEnv } from '../env.js';
 import { dbPath, publicUrl, rootDir } from '../paths.js';
 import { openOntology } from '../ontology.js';
 import { seedOntology } from '../seed.js';
-import { likeProject, presentBoard, rankBoard, saveProfile, submitProject, ensurePerson } from '../service.js';
-import { thumbDiskPath, thumbFileName, thumbRelPath } from '../thumb.js';
-import { renderBoard, renderMe, renderNew, renderPrivacy, renderProject, renderTerms } from './html.js';
+import { likeProject, presentBoard, presentBuilders, rankBoard, saveProfile, submitProject, ensurePerson } from '../service.js';
+import { thumbDiskPath, thumbRelPath } from '../thumb.js';
+import { renderBoard, renderBuilders, renderMe, renderNew, renderPrivacy, renderProject, renderTerms } from './html.js';
 
 loadEnv(path.join(rootDir, '.env'));
 
@@ -48,6 +48,13 @@ export async function handle(req, res) {
     if (req.method === 'GET' && (url.pathname === '/via-ui.css' || url.pathname === '/docs/via-ui.css')) {
       return sendCss(res);
     }
+    if (req.method === 'GET' && STATIC[url.pathname]) {
+      return sendStatic(STATIC[url.pathname], res);
+    }
+    if (req.method === 'GET' && url.pathname === '/builders') {
+      const board = await bootBoard();
+      return html(res, renderBuilders(presentBuilders(await getOntology(), board), board));
+    }
     if (req.method === 'GET' && url.pathname.startsWith('/thumbs/')) {
       return sendThumb(url.pathname, res);
     }
@@ -66,8 +73,9 @@ export async function handle(req, res) {
     if (req.method === 'POST' && url.pathname === '/p/new') {
       const body = await readBody(req);
       try {
-        await submitProject(await getOntology(), body, { forceStub: !process.env.OPENROUTER_API_KEY });
-        return redirect(res, '/');
+        const board = await submitProject(await getOntology(), body, { forceStub: !process.env.OPENROUTER_API_KEY });
+        const posted = board.rows.find((row) => row.project.title === String(body.title || '').trim());
+        return redirect(res, posted ? `/p/${encodeURIComponent(posted.project.id)}` : '/');
       } catch (error) {
         return html(res, renderNew((await getOntology()).query({ type: 'Event' }), error.message), 400);
       }
@@ -86,29 +94,39 @@ export async function handle(req, res) {
       const person = id
         ? (await getOntology()).query({ type: 'Person' }).find((row) => row.id === id)
         : null;
-      return html(res, renderMe(person));
+      return html(res, renderMe(person, null, { next: safeNext(url.searchParams.get('next')), like: url.searchParams.get('like') || '' }));
     }
     if (req.method === 'POST' && url.pathname === '/me') {
       const body = await readBody(req);
       try {
-        const person = saveProfile(await getOntology(), body);
-        res.setHeader('Set-Cookie', `via_name=${encodeURIComponent(person.display_name)}; Path=/; SameSite=Lax`);
-        return redirect(res, `/?me=${encodeURIComponent(person.id)}`);
+        const ont = await getOntology();
+        const person = saveProfile(ont, body);
+        res.setHeader('Set-Cookie', `via_name=${encodeURIComponent(person.display_name)}; Path=/; Max-Age=31536000; SameSite=Lax`);
+        if (body.like && ont.query({ type: 'Project' }).some((row) => row.id === body.like)) {
+          await likeProject(ont, { userId: person.id, projectId: body.like, signal: 'like' }, { forceStub: !process.env.OPENROUTER_API_KEY });
+        }
+        return redirect(res, safeNext(body.next) || `/me?id=${encodeURIComponent(person.id)}`);
       } catch (error) {
-        return html(res, renderMe(null, error.message), 400);
+        return html(res, renderMe(null, error.message, { next: safeNext(body.next), like: body.like || '' }), 400);
       }
     }
     if (req.method === 'POST' && url.pathname === '/like') {
       const body = await readBody(req);
       const displayName = body.display_name || readCookie(req, 'via_name');
-      if (!displayName) return redirect(res, '/me');
-      const person = ensurePerson(await getOntology(), { displayName });
-      await likeProject(await getOntology(), {
+      const next = safeNext(body.next) || '/';
+      const ont = await getOntology();
+      if (!ont.query({ type: 'Project' }).some((row) => row.id === body.project_id)) return text(res, 'Project not found', 404);
+      if (!displayName) {
+        return redirect(res, `/me?next=${encodeURIComponent(next)}&like=${encodeURIComponent(body.project_id)}`);
+      }
+      res.setHeader('Set-Cookie', `via_name=${encodeURIComponent(displayName)}; Path=/; Max-Age=31536000; SameSite=Lax`);
+      const person = ensurePerson(ont, { displayName });
+      await likeProject(ont, {
         userId: person.id,
         projectId: body.project_id,
         signal: body.signal || 'like',
       }, { forceStub: !process.env.OPENROUTER_API_KEY });
-      return redirect(res, '/');
+      return redirect(res, next);
     }
     if (req.method === 'GET' && url.pathname === '/api/board') {
       await bootBoard();
@@ -116,8 +134,11 @@ export async function handle(req, res) {
       return json(res, {
         model: board.model,
         chosen_by: board.chosen_by,
+        model_error: board.model_error,
         rows: board.rows.map((row) => ({
           rank: row.rank,
+          delta: row.delta,
+          id: row.project.id,
           score: row.score,
           reason: row.reason,
           likes: row.likes,
@@ -140,8 +161,30 @@ export async function handle(req, res) {
     }
     return text(res, 'Not found', 404);
   } catch (error) {
-    return text(res, error.message, 500);
+    if (error.status === 413) return text(res, 'Request too large', 413);
+    console.error(error);
+    return text(res, 'Via hit an error. Try again.', 500);
   }
+}
+
+/** Only same-site relative paths. */
+function safeNext(value) {
+  const next = String(value || '');
+  return next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '';
+}
+
+const STATIC = {
+  '/favicon.ico': ['favicon.png', 'image/png'],
+  '/favicon.png': ['favicon.png', 'image/png'],
+  '/apple-touch-icon.png': ['apple-touch-icon.png', 'image/png'],
+  '/via-discord-icon-512.png': ['via-discord-icon-512.png', 'image/png'],
+};
+
+function sendStatic([name, type], res) {
+  const file = path.join(rootDir, 'public', name);
+  if (!fs.existsSync(file)) return text(res, 'Not found', 404);
+  res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=86400' });
+  fs.createReadStream(file).pipe(res);
 }
 
 function readCookie(req, name) {
@@ -193,14 +236,8 @@ function sendFont(pathname, res) {
 function sendThumb(pathname, res) {
   const name = path.basename(pathname);
   if (!/^[a-z0-9-]+\.png$/i.test(name)) return text(res, 'Not found', 404);
-  const file = path.join(rootDir, 'public', 'thumbs', name);
-  if (!fs.existsSync(file)) {
-    // Try resolving from project id slug
-    const alt = thumbDiskPath(`prj_${name.replace(/\.png$/i, '')}`);
-    if (!fs.existsSync(alt)) return text(res, 'Thumb missing', 404);
-    res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600' });
-    return fs.createReadStream(alt).pipe(res);
-  }
+  const file = thumbDiskPath(`prj_${name.replace(/\.png$/i, '')}`);
+  if (!fs.existsSync(file)) return text(res, 'Thumb missing', 404);
   res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=3600' });
   fs.createReadStream(file).pipe(res);
 }
@@ -235,8 +272,13 @@ function redirect(res, location) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
-    req.on('data', (chunk) => chunks.push(chunk));
+    let size = 0;
+    req.on('data', (chunk) => {
+      size += chunk.length;
+      if (size <= 64 * 1024) chunks.push(chunk);
+    });
     req.on('end', () => {
+      if (size > 64 * 1024) return reject(Object.assign(new Error('Request too large'), { status: 413 }));
       const raw = Buffer.concat(chunks).toString('utf8');
       resolve(Object.fromEntries(new URLSearchParams(raw)));
     });

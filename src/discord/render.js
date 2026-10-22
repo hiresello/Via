@@ -62,9 +62,17 @@ export function apestronPublicName(filePath = resolveApestronPath()) {
  * Apestron when the trial file is present locally (or VIA_DISPLAY_FONT).
  * OFL Syne + Space Grotesk always available for clones.
  */
+export const DIGITS_RANGE = 'U+0030-0039';
+const APE_RANGE = 'U+0000-002F, U+003A-10FFFF';
+
+/**
+ * CSS @font-face block. Apestron Trial ships "NO GLYPH" boxes for 1 3 5 7 9,
+ * so digits in the display family come from Space Grotesk via unicode-range.
+ */
 export function displayFontFace(urlPrefix = '/fonts/') {
   return [
-    `@font-face { font-family: "${APE_FAMILY}"; src: url("${urlPrefix}Apestron.otf") format("opentype"); font-weight: 400; font-style: normal; font-display: block; }`,
+    `@font-face { font-family: "${APE_FAMILY}"; src: url("${urlPrefix}Apestron.otf") format("opentype"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: ${APE_RANGE}; }`,
+    `@font-face { font-family: "${APE_FAMILY}"; src: url("${urlPrefix}SpaceGrotesk-latin-500-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; unicode-range: ${DIGITS_RANGE}; }`,
     `@font-face { font-family: "${UI_FAMILY}"; src: url("${urlPrefix}InstrumentSans-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }`,
   ].join('\n');
 }
@@ -103,7 +111,7 @@ export function bannerHtml() {
     height: 360,
     ground: ACID,
     ink: INK,
-    kicker: caps('public bar'),
+    kicker: caps('builds'),
     title: caps('Via'),
     body: caps('Who pushed. Under the clock.'),
   });
@@ -114,7 +122,8 @@ export function pageHtml({ width, height, ground, ink, kicker, title, body }) {
   const faces = [];
   if (fonts.apestron) {
     const format = fonts.apestron.toLowerCase().endsWith('.ttf') ? 'truetype' : 'opentype';
-    faces.push(`@font-face { font-family: "Apestron"; src: url("file://${fonts.apestron}") format("${format}"); font-weight: 400 700; font-style: normal; }`);
+    faces.push(`@font-face { font-family: "Apestron"; src: url("file://${fonts.apestron}") format("${format}"); font-weight: 400; font-style: normal; unicode-range: ${APE_RANGE}; }`);
+    if (fonts.space500) faces.push(`@font-face { font-family: "Apestron"; src: url("file://${fonts.space500}") format("woff2"); font-weight: 400; font-style: normal; unicode-range: ${DIGITS_RANGE}; }`);
   }
   if (fonts.syne700) {
     faces.push(`@font-face { font-family: "Syne"; src: url("file://${fonts.syne700}") format("woff2"); font-weight: 700; font-style: normal; }`);
@@ -133,8 +142,8 @@ export function pageHtml({ width, height, ground, ink, kicker, title, body }) {
   ${faces.join('\n')}
   html, body { margin: 0; width: ${width}px; height: ${height}px; background: ${ground}; color: ${ink}; }
   body { box-sizing: border-box; padding: 48px 56px; font-family: ${display}; }
-  .kicker { font-size: 22px; letter-spacing: 0.08em; font-weight: 700; text-transform: uppercase; }
-  h1 { font-size: 92px; line-height: 0.86; font-weight: 700; margin: 18px 0; letter-spacing: -0.03em; text-transform: uppercase; }
+  .kicker { font-size: 22px; letter-spacing: 0.08em; font-weight: 400; text-transform: uppercase; }
+  h1 { font-size: 84px; line-height: 0.95; font-weight: 400; margin: 18px 0; letter-spacing: 0.01em; text-transform: uppercase; }
   p { white-space: pre-wrap; font-family: "Space Grotesk", ui-sans-serif, sans-serif; font-size: 18px; line-height: 1.45; max-width: 980px; }
 </style>
 </head>

@@ -25,21 +25,21 @@ export function projectCard(row) {
     url: `${publicUrl()}/p/${encodeURIComponent(project.id)}`,
     image: thumb ? { url: thumb } : undefined,
     fields: [
-      { name: 'Bar', value: row.reason || 'null', inline: false },
+      { name: 'Why', value: row.reason || 'null', inline: false },
       {
         name: 'Score',
-        value: `${row.score ?? '—'} · likes ${row.likes ?? 0}${row.capped ? ' · capped' : ''}`,
+        value: `#${row.rank ?? '—'} · ${row.score ?? '—'} pts · ${row.likes ?? 0} likes${row.capped ? ' · capped' : ''}`,
         inline: true,
       },
     ],
-    footer: { text: 'Via · #FF5A1F' },
+    footer: { text: 'Via · Builds', icon_url: `${publicUrl()}/via-discord-icon-512.png` },
   };
   const components = [
     {
       type: 1,
       components: [
         { type: 2, style: 1, label: `Like · ${row.likes ?? 0}`, custom_id: `via:like:${project.id}` },
-        { type: 2, style: 5, label: 'Leaderboard', url: `${publicUrl()}/` },
+        { type: 2, style: 5, label: 'Builds', url: `${publicUrl()}/` },
       ],
     },
   ];
@@ -47,5 +47,5 @@ export function projectCard(row) {
 }
 
 export function boardBannerText() {
-  return caps('Via · the bar');
+  return caps('Via · builds');
 }

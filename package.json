@@ -3,20 +3,21 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=22.13"
+    "node": ">=22.5"
   },
   "scripts": {
-    "test": "node --test test/loop.test.js",
-    "demo": "node src/cli.js demo",
-    "seed": "node src/cli.js seed",
-    "rank": "node src/cli.js rank",
+    "test": "node --experimental-sqlite --no-warnings=ExperimentalWarning --test test/loop.test.js",
+    "demo": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/cli.js demo",
+    "seed": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/cli.js seed",
+    "rank": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/cli.js rank",
     "smoke": "bash scripts/smoke.sh",
-    "thumbs": "node scripts/generate-thumbs.js",
-    "start": "node src/web/server.js",
-    "bot": "node src/discord/bot.js"
+    "thumbs": "node --experimental-sqlite --no-warnings=ExperimentalWarning scripts/generate-thumbs.js",
+    "start": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/web/server.js",
+    "bot": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/discord/bot.js"
   },
   "dependencies": {
     "discord.js": "^14.21.0",
+    "opentype.js": "^1.3.4",
     "sharp": "^0.35.5"
   }
 }

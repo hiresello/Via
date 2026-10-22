@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { decide, OPENROUTER_MODEL } from './decision.js';
 
 /**
@@ -131,28 +132,46 @@ export async function rankProjects(ontology, projects, opts = {}) {
   }
 
   try {
-    const questions = {};
+    const cached = new Map(ontology.query({ type: 'ModelScore' }).map((row) => [row.id, row]));
+    const answers = {};
+    const ask = [];
     for (const row of all) {
-      questions[row.project.id] = {
-        type: 'score',
-        instructions: 'Score this project on the rubric in state.rubric. Use only the card in state. Higher means a stranger can see a real slice finished under this event’s clock.',
-        criteria: SCORE_LEVELS,
-      };
+      const hash = stateHash(row);
+      const hit = cached.get(modelScoreId(row.project.id));
+      if (hit && hit.hash === hash && hit.model === OPENROUTER_MODEL) answers[row.project.id] = hit.answer;
+      else ask.push({ row, hash });
     }
-    const decision = await decide({
-      state: {
-        rubric: RANK_INSTRUCTIONS,
-        projects: all.map((row) => stateFor(row)),
-        note: 'Likes are conviction. They reorder only when path, clock, and hard part already clear. Cap any project missing a runnable path, the event clock, or a finished core.',
-      },
-      questions,
-      fetchImpl: opts.fetchImpl,
-    });
-    if (decision.model !== OPENROUTER_MODEL) {
-      const note = decision.rejected || decision.error || decision.skipped || 'microsoft/microsoft-decision-1 unavailable';
-      return finish('stub', 'stub', note, all.map((row) => stubRow(row)));
+    if (ask.length) {
+      const questions = {};
+      for (const { row } of ask) {
+        questions[row.project.id] = {
+          type: 'score',
+          instructions: 'Score this project on the rubric in state.rubric. Use only the card in state. Higher means a stranger can see a real slice finished under this event’s clock.',
+          criteria: SCORE_LEVELS,
+        };
+      }
+      const decision = await decide({
+        state: {
+          rubric: RANK_INSTRUCTIONS,
+          projects: ask.map(({ row }) => stateFor(row)),
+          note: 'Likes are conviction. They reorder only when path, clock, and hard part already clear. Cap any project missing a runnable path, the event clock, or a finished core.',
+        },
+        questions,
+        fetchImpl: opts.fetchImpl,
+      });
+      if (decision.model !== OPENROUTER_MODEL) {
+        const note = decision.rejected || decision.error || decision.skipped || 'microsoft/microsoft-decision-1 unavailable';
+        return finish('stub', 'stub', note, all.map((row) => stubRow(row)));
+      }
+      const ts = new Date().toISOString();
+      for (const { row, hash } of ask) {
+        const answer = decision.answers?.[row.project.id];
+        if (mapModelScore(answer) == null) continue;
+        answers[row.project.id] = answer;
+        ontology.write?.({ type: 'ModelScore', id: modelScoreId(row.project.id), project_id: row.project.id, model: OPENROUTER_MODEL, hash, answer, ts });
+      }
     }
-    const parsed = rowsFromAnswers(decision.answers, all);
+    const parsed = rowsFromAnswers(answers, all);
     if (!parsed) {
       return finish('stub', 'stub', 'microsoft/microsoft-decision-1 returned no scores', all.map((row) => stubRow(row)));
     }
@@ -160,6 +179,17 @@ export async function rankProjects(ontology, projects, opts = {}) {
   } catch (error) {
     return finish('stub', 'stub', error.message, all.map((row) => stubRow(row)));
   }
+}
+
+function modelScoreId(projectId) {
+  return `ms:${projectId}`;
+}
+
+/** Cache key: the exact card System One saw, plus the rubric and levels. */
+function stateHash(row) {
+  return crypto.createHash('sha256')
+    .update(JSON.stringify([OPENROUTER_MODEL, RANK_INSTRUCTIONS, SCORE_LEVELS, stateFor(row)]))
+    .digest('hex');
 }
 
 function finish(model, chosenBy, modelError, rows) {

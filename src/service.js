@@ -64,9 +64,28 @@ export function ensurePerson(ontology, { displayName, discordId = null }) {
   });
 }
 
-export async function submitProject(ontology, input, opts = {}) {
+const LIMITS = { title: 80, one_liner: 280, builders: 400, organizers: 200, hackathon: 120 };
+
+function cleanUrl(value, label) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  let url;
+  try { url = new URL(raw); } catch { throw new Error(`${label} must be a full http(s) link`); }
+  if (!['http:', 'https:'].includes(url.protocol) || raw.length > 500) throw new Error(`${label} must be a full http(s) link`);
+  return url.href;
+}
+
+export async function submitProject(ontology, rawInput, opts = {}) {
+  const input = { ...rawInput };
+  for (const [field, max] of Object.entries(LIMITS)) {
+    if (input[field] != null && String(input[field]).trim().length > max) throw new Error(`${field.replace('_', ' ')} is too long (max ${max})`);
+  }
+  for (const [field, label] of [['demo_url', 'Demo'], ['repo_url', 'Repo'], ['source_url', 'Page'], ['thumbnail_url', 'Thumbnail'], ['image_url', 'Image']]) {
+    if (field in input) input[field] = cleanUrl(input[field], label);
+  }
   const title = input.title && String(input.title).trim();
   if (!title) throw new Error('title is required');
+  if (!slug(title)) throw new Error('title needs at least one letter or number');
   const builders = String(input.builders || '')
     .split(',')
     .map((part) => part.trim())
@@ -142,6 +161,10 @@ export async function submitProject(ontology, input, opts = {}) {
 export function saveProfile(ontology, input) {
   const name = input.display_name?.trim();
   if (!name) throw new Error('display name is required');
+  if (name.length > 60 || !slug(name)) throw new Error('display name must be 1–60 characters with a letter or number');
+  for (const field of ['pseudonym', 'discord_id', 'github', 'x', 'skills', 'looking_for']) {
+    if (input[field] != null && String(input[field]).trim().length > 200) throw new Error(`${field.replace('_', ' ')} is too long (max 200)`);
+  }
   const id = input.discord_id?.trim()
     ? `per_${slug(input.discord_id.trim())}`
     : `per_${slug(name)}`;
@@ -226,4 +249,39 @@ function snapshotSeq() {
 
 function liveLikes(ontology, projectId) {
   return ontology.query({ type: 'Like' }).filter((row) => row.project_id === projectId && !row.retracted);
+}
+
+/** Builders ranked by the summed score of their builds, with movement against the previous snapshot. */
+export function presentBuilders(ontology, board = presentBoard(ontology)) {
+  const prevScores = new Map();
+  const snapshots = ontology.query({ type: 'RankSnapshot' })
+    .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id));
+  for (const entry of snapshots[1]?.ordered || []) prevScores.set(entry.project_id, Number(entry.score) || 0);
+  const byPerson = new Map();
+  for (const row of board.rows) {
+    for (const person of row.builders) {
+      if (!byPerson.has(person.id)) byPerson.set(person.id, { person, builds: [], score: 0, prev: 0, likes: 0 });
+      const item = byPerson.get(person.id);
+      item.builds.push(row);
+      item.score += Number(row.score) || 0;
+      item.prev += prevScores.get(row.project.id) ?? (Number(row.score) || 0);
+      item.likes += row.likes;
+    }
+  }
+  const order = (key) => [...byPerson.values()]
+    .sort((a, b) => b[key] - a[key] || String(a.person.display_name).localeCompare(String(b.person.display_name)));
+  const prevRank = new Map(order('prev').map((item, index) => [item.person.id, index + 1]));
+  const rows = order('score');
+  const top = rows[0]?.score || 1;
+  return rows.map((item, index) => {
+    const rank = index + 1;
+    const best = [...item.builds].sort((a, b) => a.rank - b.rank)[0] || null;
+    return {
+      ...item,
+      rank,
+      top,
+      best,
+      delta: snapshots[1] ? prevRank.get(item.person.id) - rank : null,
+    };
+  });
 }

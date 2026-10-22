@@ -1,15 +1,22 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
-import { APE_FAMILY, UI_FAMILY, resolveApestronPath } from './discord/render.js';
 import { rootDir, publicUrl } from './paths.js';
 import { caps, slug } from './slug.js';
+import { clampLines, measure, pathData, wrap } from './type.js';
 
 export const THUMB_W = 1080;
 export const THUMB_H = 1350; // 4:5 Instagram portrait
 
 export function thumbsDir() {
   return path.join(rootDir, 'public', 'thumbs');
+}
+
+/** Committed thumbs are read-only on Vercel; new submissions render to /tmp there. */
+export function writableThumbsDir() {
+  if (process.env.VIA_THUMBS_DIR) return process.env.VIA_THUMBS_DIR;
+  if (process.env.VERCEL) return '/tmp/via-thumbs';
+  return thumbsDir();
 }
 
 export function thumbFileName(projectIdOrTitle) {
@@ -27,7 +34,10 @@ export function thumbAbsoluteUrl(projectIdOrTitle, origin = publicUrl()) {
 }
 
 export function thumbDiskPath(projectIdOrTitle) {
-  return path.join(thumbsDir(), thumbFileName(projectIdOrTitle));
+  const name = thumbFileName(projectIdOrTitle);
+  const committed = path.join(thumbsDir(), name);
+  if (fs.existsSync(committed)) return committed;
+  return path.join(writableThumbsDir(), name);
 }
 
 /**
@@ -35,9 +45,9 @@ export function thumbDiskPath(projectIdOrTitle) {
  * Returns { image_path, thumbnail_url } always set.
  */
 export async function generateProjectThumb(project, { builders = [], origin = publicUrl() } = {}) {
-  fs.mkdirSync(thumbsDir(), { recursive: true });
   const id = project.id || `prj_${slug(project.title || 'untitled')}`;
-  const file = thumbDiskPath(id);
+  fs.mkdirSync(writableThumbsDir(), { recursive: true });
+  const file = path.join(writableThumbsDir(), thumbFileName(id));
   const svg = buildThumbSvg(project, builders);
   await sharp(Buffer.from(svg)).png().toFile(file);
   const image_path = `public/thumbs/${thumbFileName(id)}`;
@@ -59,82 +69,76 @@ export async function ensureProjectThumb(project, builders = []) {
   };
 }
 
-function buildThumbSvg(project, builders) {
-  const title = escapeXml(caps(project.title || 'untitled'));
-  const hackathon = escapeXml(caps(project.hackathon || 'hackathon'));
-  const rawLiner = String(project.one_liner || '');
-  const liner = escapeXml(rawLiner.length > 90 ? `${rawLiner.slice(0, 87)}…` : rawLiner);
+const PAD = 72;
+const TEXT_W = THUMB_W - PAD * 2;
+
+let logoDataUri = null;
+function logoUri() {
+  if (logoDataUri) return logoDataUri;
+  const file = path.join(rootDir, 'public', 'via-discord-icon-512.png');
+  logoDataUri = fs.existsSync(file) ? `data:image/png;base64,${fs.readFileSync(file).toString('base64')}` : '';
+  return logoDataUri;
+}
+
+/** All text is outlined to paths so the card never depends on system fonts. */
+export function buildThumbSvg(project, builders = []) {
+  const title = caps(project.title || 'untitled');
+  const hackathon = caps(project.hackathon || '');
   const names = builders
     .map((b) => (typeof b === 'string' ? b : b?.display_name))
     .filter(Boolean)
-    .slice(0, 4)
     .join(' · ');
-  const buildersLine = escapeXml(names || 'builders null');
-  const fontCss = embedDisplayFontCss();
 
-  // Wrap title into ~2 lines for long names
-  const titleLines = wrapCaps(project.title || 'untitled', 14);
-  const titleSvg = titleLines
-    .map((line, i) => `<text x="72" y="${300 + i * 108}" class="title">${escapeXml(caps(line))}</text>`)
-    .join('\n');
+  let size = 132;
+  let titleLines;
+  const titleOpts = () => ({ kind: 'display', size, tracking: 0.01 });
+  for (;;) {
+    titleLines = wrap(title, TEXT_W, titleOpts());
+    const widest = Math.max(...titleLines.map((line) => measure(line, titleOpts())));
+    if ((titleLines.length <= 3 && widest <= TEXT_W) || size <= 64) break;
+    size -= 6;
+  }
+  titleLines = clampLines(titleLines, 3, TEXT_W, titleOpts());
+  const lineH = Math.round(size * 1.04);
+
+  const linerOpts = { kind: 'ui', size: 38 };
+  const linerLines = clampLines(wrap(project.one_liner || '', TEXT_W, linerOpts), 4, TEXT_W, linerOpts);
+  const nameOpts = { kind: 'ui', size: 32 };
+  const nameW = TEXT_W - 150;
+  const nameLines = clampLines(wrap(names, nameW, nameOpts), 2, nameW, nameOpts);
+  const kickOpts = { kind: 'ui', size: 26, tracking: 0.1 };
+  const kickW = THUMB_W - PAD * 2 - 340;
+  const kicker = clampLines(wrap(hackathon, kickW, kickOpts), 2, kickW, kickOpts);
+
+  const titleTop = 430;
+  const parts = [];
+  titleLines.forEach((line, i) => parts.push(`<path fill="#f4f4f4" d="${pathData(line, { ...titleOpts(), x: PAD, y: titleTop + size * 0.72 + i * lineH })}"/>`));
+  const ruleY = titleTop + size * 0.72 + (titleLines.length - 1) * lineH + 48;
+  parts.push(`<rect x="${PAD}" y="${ruleY}" width="96" height="6" rx="3" fill="#ff5a1f"/>`);
+  linerLines.forEach((line, i) => parts.push(`<path fill="#b8b8b8" d="${pathData(line, { ...linerOpts, x: PAD, y: ruleY + 80 + i * 52 })}"/>`));
+  kicker.forEach((line, i) => {
+    const w = measure(line, kickOpts);
+    parts.push(`<path fill="#8a8a8a" d="${pathData(line, { ...kickOpts, x: THUMB_W - PAD - w, y: 128 + i * 38 })}"/>`);
+  });
+  const builderTop = THUMB_H - PAD - (nameLines.length - 1) * 44;
+  if (nameLines.length) {
+    parts.push(`<path fill="#ff5a1f" d="${pathData(caps('Builders'), { kind: 'ui', size: 22, tracking: 0.14, x: PAD, y: builderTop - 52 })}"/>`);
+    nameLines.forEach((line, i) => parts.push(`<path fill="#e8e8e8" d="${pathData(line, { ...nameOpts, x: PAD, y: builderTop + i * 44 })}"/>`));
+  }
+  const logo = logoUri();
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${THUMB_W}" height="${THUMB_H}" viewBox="0 0 ${THUMB_W} ${THUMB_H}">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${THUMB_W}" height="${THUMB_H}" viewBox="0 0 ${THUMB_W} ${THUMB_H}">
   <defs>
-    <style>
-      ${fontCss}
-      .field { fill: #080808; }
-      .dot { fill: #1a1a1a; }
-      .acid { fill: #7cff77; }
-      .ink { fill: #080808; }
-      .muted { fill: #8a8a8a; }
-      .accent { fill: #ff5a1f; }
-      .kicker { font-family: "${APE_FAMILY}"; font-size: 28px; font-weight: 400; letter-spacing: 0.08em; fill: #8a8a8a; }
-      .title { font-family: "${APE_FAMILY}"; font-size: 92px; font-weight: 400; letter-spacing: 0.01em; fill: #f4f4f4; }
-      .liner { font-family: "${UI_FAMILY}", sans-serif; font-size: 30px; font-weight: 400; fill: #8a8a8a; }
-      .builders { font-family: "${UI_FAMILY}", sans-serif; font-size: 30px; font-weight: 400; fill: #d8d8d8; }
-      .meta { font-family: "${UI_FAMILY}", sans-serif; font-size: 24px; font-weight: 400; letter-spacing: 0.08em; fill: #8a8a8a; }
-      .mark { font-family: "${APE_FAMILY}"; font-size: 36px; font-weight: 400; letter-spacing: 0.12em; fill: #ff5a1f; }
-    </style>
-    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
-      <circle class="dot" cx="1" cy="1" r="1.2"/>
-    </pattern>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1.2" fill="#1c1c1c"/></pattern>
+    <radialGradient id="glow" cx="1" cy="1" r="0.9"><stop offset="0" stop-color="#ff5a1f" stop-opacity="0.22"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
   </defs>
-  <rect class="field" width="100%" height="100%"/>
+  <rect width="100%" height="100%" fill="#080808"/>
   <rect width="100%" height="100%" fill="url(#grid)"/>
-  <text x="72" y="140" class="kicker">${hackathon}</text>
-  <rect class="acid" x="72" y="168" width="48" height="2"/>
-  ${titleSvg}
-  <text x="72" y="${300 + titleLines.length * 108 + 36}" class="liner">${liner || ''}</text>
-  <text x="72" y="${THUMB_H - 200}" class="meta">BUILDERS</text>
-  <text x="72" y="${THUMB_H - 150}" class="builders">${buildersLine}</text>
-  <text x="72" y="${THUMB_H - 72}" class="mark">VIA</text>
+  <rect width="100%" height="100%" fill="url(#glow)"/>
+  ${logo ? `<image x="${THUMB_W - PAD - 112}" y="${THUMB_H - PAD - 96}" width="128" height="128" href="${logo}" xlink:href="${logo}"/>` : ''}
+  ${parts.join('\n  ')}
 </svg>`;
-}
-
-function embedDisplayFontCss() {
-  const ape = resolveApestronPath();
-  if (!ape || !fs.existsSync(ape)) return '';
-  const b64 = fs.readFileSync(ape).toString('base64');
-  return `@font-face { font-family: "${APE_FAMILY}"; src: url("data:font/otf;base64,${b64}") format("opentype"); font-weight: 400; font-style: normal; }`;
-}
-
-function wrapCaps(title, maxChars) {
-  const words = caps(title).split(/\s+/).filter(Boolean);
-  if (!words.length) return ['UNTITLED'];
-  const lines = [];
-  let cur = '';
-  for (const word of words) {
-    const next = cur ? `${cur} ${word}` : word;
-    if (next.length > maxChars && cur) {
-      lines.push(cur);
-      cur = word;
-    } else {
-      cur = next;
-    }
-  }
-  if (cur) lines.push(cur);
-  return lines.slice(0, 3);
 }
 
 function escapeXml(value) {

@@ -291,3 +291,62 @@ test('System One scores cannot lift a pathless project over a path', async () =>
     else process.env.OPENROUTER_API_KEY = previous;
   }
 });
+
+test('BUILDS + BUILDERS pages: logo, favicon, medals, no BAR label, cached System One scores', async () => {
+  const { presentBuilders, submitProject } = await import('../src/service.js');
+  const { renderBuilders } = await import('../src/web/html.js');
+  const db = path.join(os.tmpdir(), `via-ui-${Date.now()}.sqlite`);
+  const ontology = openOntology(db);
+  await seedOntology(ontology, readSeedDocument());
+  const board = await rankBoard(ontology, { forceStub: true });
+  const html = renderBoard(board);
+  assert.match(html, /<h1 class="via-display">BUILDS<\/h1>/);
+  assert.match(html, /src="\/via-discord-icon-512\.png"/);
+  assert.match(html, /rel="icon"[^>]+href="\/favicon\.png"/);
+  assert.match(html, /is-gold/);
+  assert.match(html, /is-silver/);
+  assert.match(html, /is-bronze/);
+  assert.match(html, /via-bar__fill/);
+  assert.doesNotMatch(html, />\s*Bar\s*</i);
+  assert.match(html, /unicode-range: U\+0030-0039/);
+  const builders = presentBuilders(ontology, board);
+  assert.ok(builders.length > 0);
+  assert.ok(builders[0].score >= builders[builders.length - 1].score);
+  const people = renderBuilders(builders, board);
+  assert.match(people, /<h1 class="via-display">BUILDERS<\/h1>/);
+  assert.doesNotMatch(people, /\bBAR\b/);
+  for (const file of ['via-discord-icon-512.png', 'favicon.png', 'apple-touch-icon.png']) {
+    assert.ok(fs.existsSync(path.join(rootDir, 'public', file)), `${file} missing`);
+  }
+  await assert.rejects(() => submitProject(ontology, { title: 'Bad link', demo_url: 'javascript:alert(1)' }), /http\(s\)/);
+
+  const previous = process.env.OPENROUTER_API_KEY;
+  process.env.OPENROUTER_API_KEY = 'test-key-not-real';
+  let calls = 0;
+  let asked = 0;
+  const fetchImpl = async (url, init) => {
+    calls += 1;
+    const body = JSON.parse(init.body);
+    asked = Object.keys(body.questions).length;
+    const answers = Object.fromEntries(Object.keys(body.questions).map((id) => [id, { type: 'score', score: 0.5 }]));
+    return { status: 200, ok: true, text: async () => JSON.stringify({ model: OPENROUTER_MODEL, answers }) };
+  };
+  try {
+    const first = await rankProjects(ontology, ontology.query({ type: 'Project' }), { fetchImpl });
+    assert.equal(first.model, OPENROUTER_MODEL);
+    assert.equal(calls, 1);
+    assert.equal(asked, ontology.query({ type: 'Project' }).length);
+    const second = await rankProjects(ontology, ontology.query({ type: 'Project' }), { fetchImpl });
+    assert.equal(second.model, OPENROUTER_MODEL);
+    assert.equal(calls, 1, 'unchanged projects are served from the ModelScore cache');
+    const failing = async () => ({ status: 500, ok: false, text: async () => 'boom' });
+    const changed = ontology.query({ type: 'Project' })[0];
+    ontology.write({ ...changed, one_liner: `${changed.one_liner || ''} (edited)` });
+    const third = await rankProjects(ontology, ontology.query({ type: 'Project' }), { fetchImpl: failing });
+    assert.equal(third.model, 'stub');
+    assert.match(third.model_error, /OpenRouter 500/);
+  } finally {
+    if (previous == null) delete process.env.OPENROUTER_API_KEY;
+    else process.env.OPENROUTER_API_KEY = previous;
+  }
+});
