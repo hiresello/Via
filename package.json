@@ -13,7 +13,8 @@
     "smoke": "bash scripts/smoke.sh",
     "thumbs": "node --experimental-sqlite --no-warnings=ExperimentalWarning scripts/generate-thumbs.js",
     "start": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/web/server.js",
-    "bot": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/discord/bot.js"
+    "bot": "node --experimental-sqlite --no-warnings=ExperimentalWarning src/discord/bot.js",
+    "shots": "node --experimental-sqlite --no-warnings=ExperimentalWarning scripts/fetch-shots.js"
   },
   "dependencies": {
     "discord.js": "^14.21.0",

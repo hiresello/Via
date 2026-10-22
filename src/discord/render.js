@@ -111,8 +111,8 @@ export function bannerHtml() {
     height: 360,
     ground: ACID,
     ink: INK,
-    kicker: caps('builds'),
-    title: caps('Via'),
+    kicker: caps('London hackathons'),
+    title: caps('Builds'),
     body: caps('Who pushed. Under the clock.'),
   });
 }

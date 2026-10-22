@@ -84,7 +84,7 @@ export async function handle(req, res) {
         const posted = board.rows.find((row) => row.project.title === String(body.title || '').trim());
         return redirect(res, posted ? `/p/${encodeURIComponent(posted.project.id)}` : '/');
       } catch (error) {
-        return html(res, renderNew((await getOntology()).query({ type: 'Event' }), error.message), 400);
+        return html(res, renderNew((await getOntology()).query({ type: 'Event' }), error.message, body), 400);
       }
     }
     if (req.method === 'GET' && url.pathname.startsWith('/p/')) {
@@ -170,7 +170,7 @@ export async function handle(req, res) {
   } catch (error) {
     if (error.status === 413) return text(res, 'Request too large', 413);
     console.error(error);
-    return text(res, 'Via hit an error. Try again.', 500);
+    return text(res, 'Something went wrong. Try again.', 500);
   }
 }
 

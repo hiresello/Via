@@ -32,7 +32,7 @@ export function projectCard(row) {
         inline: true,
       },
     ],
-    footer: { text: 'Via · Builds', icon_url: `${publicUrl()}/via-discord-icon-512.png` },
+    footer: { text: 'Builds', icon_url: `${publicUrl()}/via-discord-icon-512.png` },
   };
   const components = [
     {
@@ -47,5 +47,5 @@ export function projectCard(row) {
 }
 
 export function boardBannerText() {
-  return caps('Via · builds');
+  return caps('Builds');
 }

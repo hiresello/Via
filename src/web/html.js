@@ -19,7 +19,7 @@ export function renderBoard(board, { origin = publicUrl() } = {}) {
     ? ''
     : '<p class="via-empty">No projects in the seed file. The board does not invent any.</p>';
   return layout({
-    title: 'Builds · Via',
+    title: 'Builds',
     active: 'builds',
     origin,
     main: `
@@ -35,7 +35,7 @@ export function renderBoard(board, { origin = publicUrl() } = {}) {
 export function renderBuilders(builders, board) {
   const rows = builders.map((row) => builderRowHtml(row)).join('\n');
   return layout({
-    title: 'Builders · Via',
+    title: 'Builders',
     active: 'builders',
     main: `
       <section class="via-hero via-enter">
@@ -110,12 +110,12 @@ export function renderProject(row, { origin = publicUrl() } = {}) {
   const builders = row.builders.map((person) => escapeHtml(person.display_name)).filter(Boolean).join(' · ');
   const reason = specificReason(row.reason);
   return layout({
-    title: `${project.title || 'Project'} · Via`,
+    title: project.title || 'Project',
     active: 'builds',
     origin,
     meta: {
-      title: caps(project.title || 'Via project'),
-      description: project.one_liner || 'A build on Via.',
+      title: caps(project.title || 'Project'),
+      description: project.one_liner || 'A hackathon build.',
       image: thumb.startsWith('http') ? thumb : `${origin}${thumb}`,
       url: pageUrl,
     },
@@ -147,10 +147,11 @@ export function renderProject(row, { origin = publicUrl() } = {}) {
   });
 }
 
-export function renderNew(events, error) {
+export function renderNew(events, error, values = {}) {
+  const v = (name) => escapeHtml(values[name] || '');
   const options = events.map((event) => `<option value="${escapeHtml(event.title)}">${escapeHtml(event.title)}</option>`).join('');
   return layout({
-    title: 'Submit · Via',
+    title: 'Submit',
     active: 'new',
     main: `
       <section class="via-hero via-hero--slim via-enter">
@@ -159,16 +160,16 @@ export function renderNew(events, error) {
       </section>
       <form class="via-glass via-card via-form" method="post" action="/p/new">
         ${error ? `<p class="via-error">${escapeHtml(error)}</p>` : ''}
-        <div class="via-field-row"><label class="via-label">Title</label><input class="via-input" name="title" required maxlength="120"></div>
-        <div class="via-field-row"><label class="via-label">One line</label><input class="via-input" name="one_liner" maxlength="280" placeholder="What a stranger can see"></div>
-        <div class="via-field-row"><label class="via-label">Demo URL</label><input class="via-input" name="demo_url" type="url" placeholder="null if you have none"></div>
-        <div class="via-field-row"><label class="via-label">Repo URL</label><input class="via-input" name="repo_url" type="url"></div>
-        <div class="via-field-row"><label class="via-label">Source URL</label><input class="via-input" name="source_url" type="url"></div>
-        <div class="via-field-row"><label class="via-label">Image URL</label><input class="via-input" name="thumbnail_url" type="url" placeholder="Optional — else Via generates a share card"></div>
-        <div class="via-field-row"><label class="via-label">Hackathon</label><input class="via-input" name="hackathon" list="events"></div>
+        <div class="via-field-row"><label class="via-label">Title</label><input class="via-input" name="title" value="${v('title')}" required maxlength="120"></div>
+        <div class="via-field-row"><label class="via-label">One line</label><input class="via-input" name="one_liner" value="${v('one_liner')}" maxlength="280" placeholder="What a stranger can see"></div>
+        <div class="via-field-row"><label class="via-label">Demo URL</label><input class="via-input" name="demo_url" value="${v('demo_url')}" type="url" placeholder="null if you have none"></div>
+        <div class="via-field-row"><label class="via-label">Repo URL</label><input class="via-input" name="repo_url" value="${v('repo_url')}" type="url"></div>
+        <div class="via-field-row"><label class="via-label">Source URL</label><input class="via-input" name="source_url" value="${v('source_url')}" type="url"></div>
+        <div class="via-field-row"><label class="via-label">Image URL</label><input class="via-input" name="thumbnail_url" value="${v('thumbnail_url')}" type="url" placeholder="Optional — else we screenshot the demo or make a card"></div>
+        <div class="via-field-row"><label class="via-label">Hackathon</label><input class="via-input" name="hackathon" value="${v('hackathon')}" list="events"></div>
         <datalist id="events">${options}</datalist>
-        <div class="via-field-row"><label class="via-label">Builders</label><input class="via-input" name="builders" placeholder="Names, comma separated"></div>
-        <div class="via-field-row"><label class="via-label">Organizers</label><input class="via-input" name="organizers" placeholder="Leave blank for null"></div>
+        <div class="via-field-row"><label class="via-label">Builders</label><input class="via-input" name="builders" value="${v('builders')}" placeholder="Names, comma separated"></div>
+        <div class="via-field-row"><label class="via-label">Organizers</label><input class="via-input" name="organizers" value="${v('organizers')}" placeholder="Leave blank for null"></div>
         <div class="via-actions"><button type="submit" class="via-btn via-btn--primary">${caps('Post')}</button></div>
       </form>
       <a class="via-back" href="/">← ${caps('Builds')}</a>`,
@@ -177,7 +178,7 @@ export function renderNew(events, error) {
 
 export function renderMe(person, error, { next = '', like = '' } = {}) {
   return layout({
-    title: 'Me · Via',
+    title: 'Me',
     active: 'me',
     main: `
       <section class="via-hero via-hero--slim via-enter">
@@ -205,7 +206,7 @@ export function renderMe(person, error, { next = '', like = '' } = {}) {
 /** Minimal terms for Discord Developer Portal. No invented domain. */
 export function renderTerms() {
   return layout({
-    title: 'Terms · Via',
+    title: 'Terms',
     active: null,
     main: `
       <section class="via-hero via-hero--slim via-enter">
@@ -233,7 +234,7 @@ export function renderTerms() {
  */
 export function renderPrivacy() {
   return layout({
-    title: 'Privacy · Via',
+    title: 'Privacy',
     active: null,
     main: `
       <section class="via-hero via-hero--slim via-enter">
@@ -483,7 +484,7 @@ ${displayOverride}
     <main>
     ${main}
     </main>
-    <footer class="via-footer"><span>Via · London hackathon community</span><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/api/board">API</a></footer>
+    <footer class="via-footer"><span>London hackathon community</span><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/api/board">API</a></footer>
   </div>
   <script>
     (function () {

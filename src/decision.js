@@ -11,7 +11,16 @@ export const OPENROUTER_DECISIONS_URL = 'https://openrouter.ai/api/v1/api/alpha/
 
 /** Host and .env both count. Whitespace and a blank assignment do not. */
 export function hasOpenRouterKey() {
-  return Boolean(String(process.env.OPENROUTER_API_KEY || '').trim());
+  return Boolean(openRouterKey());
+}
+
+/** The raw key: trims, drops wrapping quotes and a pasted `Bearer ` prefix. */
+export function openRouterKey() {
+  return String(process.env.OPENROUTER_API_KEY || '')
+    .trim()
+    .replace(/^(['"])(.*)\1$/, '$2')
+    .replace(/^Bearer\s+/i, '')
+    .trim();
 }
 
 /** Questions are a map of id → question. An array is rejected by System One. */
@@ -22,7 +31,7 @@ export function isQuestionRecord(questions) {
 const DECISION_TIMEOUT_MS = 45_000;
 
 export async function decide({ state, questions, fetchImpl = fetch }) {
-  const key = String(process.env.OPENROUTER_API_KEY || '').trim();
+  const key = openRouterKey();
   if (!key) {
     return {
       model: 'stub',
@@ -58,7 +67,7 @@ export async function decide({ state, questions, fetchImpl = fetch }) {
 }
 
 function redact(message) {
-  const key = String(process.env.OPENROUTER_API_KEY || '').trim();
+  const key = openRouterKey();
   let text = String(message || 'OpenRouter request failed');
   if (key) text = text.split(key).join('[redacted]');
   return text.slice(0, 300);

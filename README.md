@@ -105,3 +105,7 @@ Replace `YOUR_USER` with the real GitHub user or org. Do not invent a production
 ## License
 
 Code: MIT (`LICENSE`). Display: Apestron Trial (`fonts/Apestron.otf`, Befonts personal/trial — buy a commercial license before a paid deploy). Body: Instrument Sans OFL. Syne and Space Grotesk files remain in `fonts/` for older Discord renders.
+
+## Project images
+
+`npm run shots` stores one real image per seed project in `public/shots/` (a live demo screenshot from headless Chrome, else the first README image, else the page's og:image). Run `npm run thumbs` afterwards: each 4:5 card puts that image on top of the title and builders. A project with no image keeps the plain title card.
