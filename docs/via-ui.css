@@ -1,0 +1,594 @@
+/**
+ * Via UI — drop-in tokens + components
+ * Contract: docs/via-ui.md
+ * Inspo: media/via-cyberpunk-inspo.png · media/via-type-specimen.png
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="/docs/via-ui.css" />
+ *   <body class="via-field">…</body>
+ *
+ * Fonts: Apestron when present locally (trial, not shipped); else OFL Syne.
+ * Discord: embeds use color 0xFF5A1F — CSS does not style Discord chrome.
+ */
+
+/* -------------------------------------------------------------------------- */
+/* Tokens                                                                     */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  /* Field */
+  --via-bg: #080808;
+  --via-bg-elevated: #121212;
+  --via-bg-panel: rgba(10, 10, 10, 0.72);
+  --via-grid-dot: #1a1a1a;
+  --via-grid-size: 24px;
+
+  /* Ink */
+  --via-ink: #f2f2f2;
+  --via-muted: #8a8a8a;
+  --via-faint: #3a3a3a;
+
+  /* Accents — two jobs, never swap */
+  --via-accent: #ff5a1f;
+  --via-accent-dim: rgba(255, 90, 31, 0.35);
+  --via-accent-glow: 0 0 24px rgba(255, 90, 31, 0.45);
+  --via-acid: #7cff77;
+  --via-acid-ink: #080808;
+  --via-acid-glow: 0 0 32px rgba(124, 255, 119, 0.35);
+  --via-danger: #ff3b5c;
+  --via-ok: #7cff77;
+
+  /* Type */
+  --via-font-display: "Apestron Trial Version";
+  --via-font-ui: "Instrument Sans";
+  --via-font-mono: "Instrument Sans";
+  --via-fs-hero: clamp(2.5rem, 6vw, 4.5rem);
+  --via-fs-title: 1.125rem;
+  --via-fs-body: 0.875rem;
+  --via-fs-label: 0.6875rem;
+  --via-lh-tight: 1.05;
+  --via-lh-body: 1.45;
+  --via-tracking-display: 0.02em;
+  --via-tracking-label: 0.08em;
+
+  /* Space / shape */
+  --via-space-1: 4px;
+  --via-space-2: 8px;
+  --via-space-3: 12px;
+  --via-space-4: 16px;
+  --via-space-5: 24px;
+  --via-space-6: 32px;
+  --via-space-7: 48px;
+  --via-space-8: 64px;
+  --via-radius-sm: 8px;
+  --via-radius: 14px;
+  --via-radius-lg: 20px;
+  --via-radius-pill: 999px;
+  --via-blur: 20px;
+  --via-border: 1px solid rgba(255, 255, 255, 0.08);
+  --via-border-strong: 1px solid rgba(255, 255, 255, 0.14);
+
+  /* Motion */
+  --via-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --via-dur: 160ms;
+
+  /* Discord parity */
+  --via-embed-color: #ff5a1f; /* 0xFF5A1F */
+}
+
+/* -------------------------------------------------------------------------- */
+/* Base                                                                       */
+/* -------------------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.via-field {
+  margin: 0;
+  min-height: 100dvh;
+  color: var(--via-ink);
+  background-color: var(--via-bg);
+  background-image: radial-gradient(var(--via-grid-dot) 1px, transparent 1px);
+  background-size: var(--via-grid-size) var(--via-grid-size);
+  font-family: var(--via-font-ui);
+  font-size: var(--via-fs-body);
+  line-height: var(--via-lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.via-field a {
+  color: inherit;
+  text-decoration: none;
+  transition: opacity var(--via-dur) var(--via-ease);
+}
+
+.via-field a:hover {
+  opacity: 0.85;
+}
+
+.via-field :focus-visible {
+  outline: 2px solid var(--via-accent);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Type                                                                       */
+/* -------------------------------------------------------------------------- */
+
+.via-display {
+  font-family: var(--via-font-display);
+  font-weight: 400;
+  font-style: normal;
+  font-synthesis: none;
+  font-size: var(--via-fs-hero);
+  line-height: var(--via-lh-tight);
+  letter-spacing: var(--via-tracking-display);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.via-title {
+  font-family: var(--via-font-ui);
+  font-weight: 600;
+  font-size: var(--via-fs-title);
+  line-height: var(--via-lh-tight);
+  margin: 0;
+}
+
+.via-label {
+  font-family: var(--via-font-ui);
+  font-size: var(--via-fs-label);
+  font-weight: 500;
+  letter-spacing: var(--via-tracking-label);
+  text-transform: uppercase;
+  color: var(--via-muted);
+  margin: 0;
+}
+
+.via-mono {
+  font-family: var(--via-font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.via-muted {
+  color: var(--via-muted);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Surfaces                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.via-glass {
+  background: var(--via-bg-panel);
+  border: var(--via-border);
+  border-radius: var(--via-radius-lg);
+  backdrop-filter: blur(var(--via-blur));
+  -webkit-backdrop-filter: blur(var(--via-blur));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.via-well {
+  background: var(--via-bg-elevated);
+  border: var(--via-border);
+  border-radius: var(--via-radius-sm);
+}
+
+.via-hero {
+  background: transparent;
+  color: var(--via-ink);
+  border-radius: 0;
+  padding: var(--via-space-7) 0 var(--via-space-6);
+}
+
+.via-hero .via-display,
+.via-hero .via-label,
+.via-hero a {
+  color: var(--via-ink);
+}
+
+.via-hero a {
+  text-decoration: none;
+}
+
+.via-rail {
+  border-left: 3px solid var(--via-accent);
+  padding-left: var(--via-space-4);
+}
+
+.via-ghost {
+  background: transparent;
+  border: var(--via-border);
+  border-radius: var(--via-radius);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Shell / nav                                                                */
+/* -------------------------------------------------------------------------- */
+
+.via-shell {
+  width: min(720px, calc(100% - 2 * var(--via-space-5)));
+  margin-inline: auto;
+  padding-block: var(--via-space-5) var(--via-space-8);
+}
+
+.via-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--via-space-5);
+  margin-bottom: var(--via-space-6);
+}
+
+.via-nav__brand {
+  font-family: var(--via-font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  font-size: 1.25rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--via-accent);
+  text-decoration: none;
+}
+
+.via-nav__links {
+  display: flex;
+  gap: var(--via-space-5);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.via-nav__links a {
+  font-size: var(--via-fs-label);
+  letter-spacing: var(--via-tracking-label);
+  text-transform: uppercase;
+  color: var(--via-ink);
+  text-decoration: none;
+}
+
+.via-nav__links a[aria-current="page"],
+.via-nav__links a.is-active {
+  color: var(--via-ink);
+}
+
+.via-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--via-space-2);
+  margin-top: var(--via-space-6);
+  font-size: var(--via-fs-label);
+  letter-spacing: var(--via-tracking-label);
+  text-transform: uppercase;
+  color: var(--via-muted);
+}
+
+.via-back:hover {
+  color: var(--via-accent);
+  opacity: 1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Cards / rank                                                               */
+/* -------------------------------------------------------------------------- */
+
+.via-card {
+  display: grid;
+  gap: var(--via-space-4);
+  padding: var(--via-space-5);
+  margin-bottom: var(--via-space-4);
+}
+
+.via-card--rank1 {
+  background: transparent;
+  color: var(--via-ink);
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.via-card--rank1 .via-label,
+.via-card--rank1 .via-muted,
+.via-card--rank1 .via-display,
+.via-card--rank1 .via-title {
+  color: var(--via-ink);
+}
+
+.via-card--rank1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.via-card--rank1 .via-thumb {
+  box-shadow: 0 0 0 1px var(--via-acid);
+}
+
+.via-card__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--via-space-4);
+}
+
+.via-rank {
+  font-family: var(--via-font-display);
+  font-weight: 400;
+  font-synthesis: none;
+  font-size: 1.25rem;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--via-muted);
+}
+
+.via-card--rank1 .via-rank {
+  color: var(--via-acid);
+}
+
+.via-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--via-space-2) var(--via-space-4);
+  font-size: var(--via-fs-body);
+}
+
+.via-meta dt {
+  font-size: var(--via-fs-label);
+  letter-spacing: var(--via-tracking-label);
+  text-transform: uppercase;
+  color: var(--via-muted);
+}
+
+.via-card--rank1 .via-meta dt {
+  color: rgba(8, 8, 8, 0.55);
+}
+
+.via-meta dd {
+  margin: 0;
+}
+
+.via-quote {
+  border-left: 3px solid var(--via-accent);
+  padding-left: var(--via-space-4);
+  color: var(--via-ink);
+  font-size: var(--via-fs-body);
+}
+
+.via-card--rank1 .via-quote {
+  border-left-color: var(--via-acid);
+  color: var(--via-ink);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Controls                                                                   */
+/* -------------------------------------------------------------------------- */
+
+.via-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--via-space-2);
+}
+
+.via-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--via-space-2);
+  min-height: 36px;
+  padding: 0 var(--via-space-4);
+  border-radius: var(--via-radius-sm);
+  border: var(--via-border);
+  background: var(--via-bg-elevated);
+  color: var(--via-ink);
+  font-family: var(--via-font-ui);
+  font-size: var(--via-fs-label);
+  font-weight: 400;
+  letter-spacing: var(--via-tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--via-dur) var(--via-ease),
+    color var(--via-dur) var(--via-ease),
+    box-shadow var(--via-dur) var(--via-ease),
+    border-color var(--via-dur) var(--via-ease),
+    transform var(--via-dur) var(--via-ease);
+}
+
+.via-btn:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.via-btn:active {
+  transform: translateY(1px);
+}
+
+.via-btn--primary {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--via-ink);
+}
+
+.via-btn--primary:hover {
+  box-shadow: none;
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.via-btn--ghost {
+  background: transparent;
+}
+
+.via-btn--icon {
+  width: 36px;
+  padding: 0;
+  border-radius: var(--via-radius-pill);
+}
+
+.via-btn:disabled,
+.via-btn[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.via-input,
+.via-select,
+.via-textarea {
+  width: 100%;
+  min-height: 36px;
+  padding: var(--via-space-2) var(--via-space-3);
+  border-radius: var(--via-radius-sm);
+  border: var(--via-border);
+  background: var(--via-bg-elevated);
+  color: var(--via-ink);
+  font-family: var(--via-font-ui);
+  font-size: var(--via-fs-body);
+  transition: border-color var(--via-dur) var(--via-ease);
+}
+
+.via-textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.via-input::placeholder,
+.via-textarea::placeholder {
+  color: var(--via-muted);
+}
+
+.via-input:focus,
+.via-select:focus,
+.via-textarea:focus {
+  border-color: var(--via-accent);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--via-accent-dim);
+}
+
+.via-field-row {
+  display: grid;
+  gap: var(--via-space-2);
+}
+
+.via-field-row > .via-label {
+  display: block;
+}
+
+/* Pill utility cluster (inspo top-right) — keep sparse */
+.via-pills {
+  display: inline-flex;
+  gap: var(--via-space-2);
+  padding: var(--via-space-1);
+  border-radius: var(--via-radius-pill);
+  border: var(--via-border);
+  background: var(--via-bg-panel);
+  backdrop-filter: blur(var(--via-blur));
+}
+
+.via-pills .via-btn {
+  min-height: 32px;
+  border: none;
+  background: transparent;
+}
+
+.via-pills .via-btn.is-active {
+  background: var(--via-accent-dim);
+  color: var(--via-accent);
+}
+
+/* Status dot */
+.via-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--via-faint);
+  display: inline-block;
+}
+
+.via-dot--live {
+  background: var(--via-accent);
+  box-shadow: var(--via-accent-glow);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Empty / error                                                              */
+/* -------------------------------------------------------------------------- */
+
+.via-empty {
+  padding: var(--via-space-7) var(--via-space-5);
+  text-align: center;
+  border: 1px dashed var(--via-faint);
+  border-radius: var(--via-radius);
+  color: var(--via-muted);
+}
+
+.via-error {
+  border-left: 3px solid var(--via-danger);
+  padding: var(--via-space-3) var(--via-space-4);
+  background: rgba(255, 59, 92, 0.08);
+  border-radius: 0 var(--via-radius-sm) var(--via-radius-sm) 0;
+  color: var(--via-ink);
+  font-size: var(--via-fs-body);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Motion                                                                     */
+/* -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  .via-enter {
+    animation: via-enter var(--via-dur) var(--via-ease) both;
+  }
+
+  @keyframes via-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Small screens                                                              */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 520px) {
+  .via-shell {
+    width: min(100%, calc(100% - 2 * var(--via-space-4)));
+  }
+
+  .via-nav {
+    flex-wrap: wrap;
+  }
+
+  .via-meta {
+    grid-template-columns: 1fr;
+    gap: var(--via-space-1);
+  }
+
+  .via-actions {
+    width: 100%;
+  }
+
+  .via-actions .via-btn--primary {
+    flex: 1;
+  }
+}

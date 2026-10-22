@@ -1,0 +1,1100 @@
+[
+  {
+    "title": "CityZenith",
+    "one_liner": "AI urban-planning tool that turns one parcel, or a whole borough, of UK planning evidence into a site appraisal in seconds.",
+    "builders": [
+      {
+        "name": "Davin Wong",
+        "socials": [
+          "https://devpost.com/HyperD1ve"
+        ]
+      },
+      {
+        "name": "Luciano Suen",
+        "socials": [
+          "https://devpost.com/luciano-suen"
+        ]
+      },
+      {
+        "name": "Johnathan",
+        "socials": [
+          "https://devpost.com/johnnytest07"
+        ]
+      }
+    ],
+    "hackathon": "HackLondon 2026",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/cityzenith",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "FocusField",
+    "one_liner": "A desk beacon that locks your phone while you stay inside its Bluetooth forcefield, and unlocks it when you leave.",
+    "builders": [
+      {
+        "name": "Tymur Pryvalov",
+        "socials": [
+          "https://devpost.com/vvolk0514"
+        ]
+      },
+      {
+        "name": "Nikita Pchelin",
+        "socials": [
+          "https://devpost.com/np221484"
+        ]
+      },
+      {
+        "name": "Lorenzo Samuel",
+        "socials": [
+          "https://devpost.com/lgsamuel14"
+        ]
+      },
+      {
+        "name": "Haider Ali",
+        "socials": [
+          "https://devpost.com/mr-haider-sm-ali"
+        ]
+      }
+    ],
+    "hackathon": "HackLondon 2026",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/focus-field",
+    "demo_url": null,
+    "repo_url": "https://github.com/HaiderAli3D/Proxus2"
+  },
+  {
+    "title": "Flappy Hacks",
+    "one_liner": "Everybody's favourite game, now in VR.",
+    "builders": [
+      {
+        "name": "Andreas Zinonos",
+        "socials": [
+          "https://devpost.com/AndreasZinononos"
+        ]
+      },
+      {
+        "name": "Yll Kelani",
+        "socials": [
+          "https://devpost.com/YllKelani"
+        ]
+      },
+      {
+        "name": "Jay Jeyaruban",
+        "socials": [
+          "https://devpost.com/JayJeyaruban"
+        ]
+      },
+      {
+        "name": "Oliver Cleveley-Jones",
+        "socials": [
+          "https://devpost.com/Tignes"
+        ]
+      }
+    ],
+    "hackathon": "HackLondon",
+    "organizers": [],
+    "year": 2016,
+    "source_url": "https://devpost.com/software/top-secret-chicken-app",
+    "demo_url": null,
+    "repo_url": "https://github.com/yllkelani/Top-Secret-Chicken-App"
+  },
+  {
+    "title": "Harmony",
+    "one_liner": "Supermarket membership app that stores a loyalty card, tracks nutrition from what you buy, and farms chickens from those purchases.",
+    "builders": [
+      {
+        "name": "Julianne Leung",
+        "socials": [
+          "https://devpost.com/plumsauce089"
+        ]
+      },
+      {
+        "name": "Isaac Lee",
+        "socials": [
+          "https://devpost.com/Iajedi"
+        ]
+      },
+      {
+        "name": "Henry Yu",
+        "socials": [
+          "https://devpost.com/henrytsyu"
+        ]
+      }
+    ],
+    "hackathon": "IC Hack 24",
+    "organizers": [],
+    "year": 2024,
+    "source_url": "https://devpost.com/software/harmony-lzx5j4",
+    "demo_url": null,
+    "repo_url": "https://github.com/ccchi9903/ichack24"
+  },
+  {
+    "title": "A Multi-Agent's Paradise",
+    "one_liner": "A shrinking-map game server that both human players and learning agents can join.",
+    "builders": [
+      {
+        "name": "sirvan3tr Almasi",
+        "socials": [
+          "https://devpost.com/sirvan3tr"
+        ]
+      },
+      {
+        "name": "Edward Stables",
+        "socials": [
+          "https://devpost.com/edwardstables1198"
+        ]
+      },
+      {
+        "name": "Joe Arrowsmith",
+        "socials": [
+          "https://devpost.com/Joearrowsmith"
+        ]
+      },
+      {
+        "name": "Tudor Trita",
+        "socials": [
+          "https://devpost.com/tudortrita"
+        ]
+      }
+    ],
+    "hackathon": "Hack Cambridge 101",
+    "organizers": [],
+    "year": 2020,
+    "source_url": "https://devpost.com/software/a-multi-agent-s-paradise",
+    "demo_url": null,
+    "repo_url": "https://github.com/Joearrowsmith/hackcambridge_2020"
+  },
+  {
+    "title": "prep me",
+    "one_liner": "An Amazon Alexa flashcard skill that quizzes you and reschedules each card from whether the answer was right.",
+    "builders": [
+      {
+        "name": "Andrei Prahoveanu",
+        "socials": [
+          "https://devpost.com/AndreiPrahoveanu"
+        ]
+      },
+      {
+        "name": "Vasundhara Agarwal",
+        "socials": [
+          "https://devpost.com/va308"
+        ]
+      },
+      {
+        "name": "Peter Ondus",
+        "socials": [
+          "https://devpost.com/pondus314"
+        ]
+      },
+      {
+        "name": "Shiv Gunter",
+        "socials": [
+          "https://devpost.com/Hivestrung"
+        ]
+      }
+    ],
+    "hackathon": "Hack Cambridge 101",
+    "organizers": [],
+    "year": 2020,
+    "source_url": "https://devpost.com/software/prep-me",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "Code Clash",
+    "one_liner": "Real-time multiplayer coding battles with instant AI feedback on the code you submit.",
+    "builders": [
+      {
+        "name": "Wren Alexander",
+        "socials": [
+          "https://devpost.com/wrac4242"
+        ]
+      },
+      {
+        "name": "Vincent Mendy",
+        "socials": [
+          "https://devpost.com/vmendy0707"
+        ]
+      },
+      {
+        "name": "Na Wang",
+        "socials": [
+          "https://devpost.com/nwng04"
+        ]
+      },
+      {
+        "name": "Noah Pham",
+        "socials": [
+          "https://devpost.com/khoinguyenpham04"
+        ]
+      }
+    ],
+    "hackathon": "hackSheffield 9",
+    "organizers": [],
+    "year": 2024,
+    "source_url": "https://devpost.com/software/code-clash",
+    "demo_url": "https://codeclashh.vercel.app/",
+    "repo_url": "https://github.com/khoinguyenpham04/HackSheffield9"
+  },
+  {
+    "title": "TripSync",
+    "one_liner": "Multi-agent group chat that helps friends plan a trip together.",
+    "builders": [
+      {
+        "name": "Murat Guney Kemal",
+        "socials": [
+          "https://devpost.com/MuratGuneyKemal"
+        ]
+      },
+      {
+        "name": "Uzay Çetinkaya",
+        "socials": [
+          "https://devpost.com/UZYPC"
+        ]
+      }
+    ],
+    "hackathon": "HackSheffield10",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/mu-u86lhg",
+    "demo_url": null,
+    "repo_url": "https://github.com/MuratGuneyKemal/hacksheffield"
+  },
+  {
+    "title": "Conqr",
+    "one_liner": "A territory game where you take and hold land by answering questions.",
+    "builders": [
+      {
+        "name": "Wen Wang Yew",
+        "socials": [
+          "https://devpost.com/reeveyew"
+        ]
+      },
+      {
+        "name": "Tim Xiao",
+        "socials": [
+          "https://devpost.com/timxzz"
+        ]
+      },
+      {
+        "name": "Joseph Mambwe",
+        "socials": [
+          "https://devpost.com/JosephMambwe"
+        ]
+      },
+      {
+        "name": "Patrick Beardmore",
+        "socials": [
+          "https://devpost.com/patrickbeardmore"
+        ]
+      }
+    ],
+    "hackathon": "OxHACK 2014",
+    "organizers": [],
+    "year": 2014,
+    "source_url": "https://devpost.com/software/conqr",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "dHub",
+    "one_liner": "Web3 event tool for exclusive livestreams that only holders of a given token can join.",
+    "builders": [
+      {
+        "name": "Abdul Mateen",
+        "socials": []
+      },
+      {
+        "name": "Vijay Krishnavanshi",
+        "socials": []
+      }
+    ],
+    "hackathon": "NFTHack 2022",
+    "organizers": [
+      "ETHGlobal"
+    ],
+    "year": 2022,
+    "source_url": "https://ethglobal.com/showcase/dhub-7jswv",
+    "demo_url": "https://dhub-eth.herokuapp.com/",
+    "repo_url": "https://github.com/dHub-eth/frontend"
+  },
+  {
+    "title": "People's Platform",
+    "one_liner": "A browser extension and fund so a community can up-vote, down-vote, and pay creators without advertiser control.",
+    "builders": [
+      {
+        "name": "Christian",
+        "socials": []
+      },
+      {
+        "name": "Sercan",
+        "socials": []
+      },
+      {
+        "name": "Ramazan",
+        "socials": []
+      }
+    ],
+    "hackathon": "ETHGlobal Istanbul",
+    "organizers": [
+      "ETHGlobal"
+    ],
+    "year": 2023,
+    "source_url": "https://ethglobal.com/showcase/peoples-platform-kqr49",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "Brick",
+    "one_liner": "Hospital resilience workspace: 3D ops view, live sensors, and simulations so facilities can cut energy use and rehearse floods, smoke, and outages.",
+    "builders": [
+      {
+        "name": "LaboriouslyExquisite",
+        "socials": [
+          "https://devpost.com/LaboriouslyExquisite"
+        ]
+      },
+      {
+        "name": "Pranav Palle",
+        "socials": [
+          "https://devpost.com/pranav4096"
+        ]
+      },
+      {
+        "name": "Divyesh Thirukonda",
+        "socials": [
+          "https://devpost.com/divyesh-thirukonda"
+        ]
+      },
+      {
+        "name": "Bowen Li",
+        "socials": [
+          "https://devpost.com/lib889"
+        ]
+      }
+    ],
+    "hackathon": "Health in Climate 2026 NYC Hackathon",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/brick-j5plyg",
+    "demo_url": "https://climhack.vercel.app/",
+    "repo_url": null
+  },
+  {
+    "title": "Care Cast",
+    "one_liner": "WhatsApp forecasts that turn weather into patient-specific health outreach, not just a temperature alert.",
+    "builders": [
+      {
+        "name": "Muhammad Ahsan",
+        "socials": [
+          "https://devpost.com/ahsantahseen"
+        ]
+      }
+    ],
+    "hackathon": "Health in Climate NYC Hackathon 2025",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/care-cast",
+    "demo_url": null,
+    "repo_url": "https://github.com/ahsantahseen/Storm-Logic"
+  },
+  {
+    "title": "Verdent AI",
+    "one_liner": "ML model that learns healthcare-product emissions from past LCAs and predicts footprints for products that lack one.",
+    "builders": [
+      {
+        "name": "Atharv Jayprakash",
+        "socials": [
+          "https://devpost.com/aj872"
+        ]
+      }
+    ],
+    "hackathon": "Health in Climate NYC Hackathon 2025",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/verdent-ai",
+    "demo_url": null,
+    "repo_url": "https://github.com/sar76/Cornell_LCA"
+  },
+  {
+    "title": "HeatIQ",
+    "one_liner": "Dashboard that turns fragmented heat data into one site-level risk score so outdoor employers can plan across many work sites.",
+    "builders": [
+      {
+        "name": "Zach Sheldon",
+        "socials": [
+          "https://devpost.com/zpsheldon"
+        ]
+      }
+    ],
+    "hackathon": "Health in Climate NYC Hackathon 2025",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/heatiq",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "Rezilient VA",
+    "one_liner": "Predictive model that turns a climate forecast into ranked, capacity-aware outreach a VA care team can run today.",
+    "builders": [
+      {
+        "name": "Ismail Nabeel",
+        "socials": [
+          "https://devpost.com/isnabeel"
+        ]
+      },
+      {
+        "name": "Rahul Bose Reddy Modugula",
+        "socials": [
+          "https://devpost.com/rahulreddy"
+        ]
+      },
+      {
+        "name": "Harshini Vijaya Kumar",
+        "socials": [
+          "https://devpost.com/hv2201"
+        ]
+      },
+      {
+        "name": "aparnadasaraju-blip",
+        "socials": [
+          "https://devpost.com/aparnadasaraju-blip"
+        ]
+      }
+    ],
+    "hackathon": "Health in Climate 2026 NYC Hackathon",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/grounded-cyborgs",
+    "demo_url": null,
+    "repo_url": "https://github.com/harshini2212/Climate-Health-Cornell-Hackathon"
+  },
+  {
+    "title": "HavenPath",
+    "one_liner": "Pedestrian navigation that picks routes for shade, cleaner air, and lower traffic—not just the fastest walk.",
+    "builders": [
+      {
+        "name": "Lily Fu",
+        "socials": [
+          "https://devpost.com/lilyyf08"
+        ]
+      },
+      {
+        "name": "Weiming He",
+        "socials": [
+          "https://devpost.com/wh249"
+        ]
+      },
+      {
+        "name": "Lilian He",
+        "socials": [
+          "https://devpost.com/ehelili510"
+        ]
+      }
+    ],
+    "hackathon": "Health in Climate 2026 NYC Hackathon",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/havenpath",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "SignSpeak",
+    "one_liner": "On-device ASL letter recognition with practice modes so learners get live feedback without sending video to a server.",
+    "builders": [
+      {
+        "name": "Medhansh Sharma",
+        "socials": [
+          "https://devpost.com/medhu0505"
+        ]
+      }
+    ],
+    "hackathon": "Moonshot Hackathon",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/signspeak-kceyum",
+    "demo_url": "https://sign-speak-rho.vercel.app",
+    "repo_url": "https://github.com/medhu0505/SignSpeak"
+  },
+  {
+    "title": "SignSpeak",
+    "one_liner": "Computer-vision lessons and quizzes that teach and score sign language progression in the browser.",
+    "builders": [
+      {
+        "name": "Jeremy Su",
+        "socials": [
+          "https://devpost.com/jeremysu64"
+        ]
+      },
+      {
+        "name": "Sean Wang",
+        "socials": [
+          "https://devpost.com/PilotPrix"
+        ]
+      },
+      {
+        "name": "Doris Lam",
+        "socials": [
+          "https://devpost.com/Doryimoo"
+        ]
+      },
+      {
+        "name": "Kartlez Slick",
+        "socials": [
+          "https://devpost.com/Kartlez"
+        ]
+      }
+    ],
+    "hackathon": "uOttaHack 5",
+    "organizers": [],
+    "year": 2023,
+    "source_url": "https://devpost.com/software/signspeak-kgufm1",
+    "demo_url": null,
+    "repo_url": "https://github.com/PilotPrix/UOttaHacks"
+  },
+  {
+    "title": "Treoguessr",
+    "one_liner": "Guess-where-to-plant game that scores tree placements against real air-quality maps to teach urban pollution fixes.",
+    "builders": [
+      {
+        "name": "YusufHussain242",
+        "socials": [
+          "https://devpost.com/YusufHussain242"
+        ]
+      },
+      {
+        "name": "Na Wang",
+        "socials": [
+          "https://devpost.com/nwng04"
+        ]
+      },
+      {
+        "name": "Stanley James",
+        "socials": [
+          "https://devpost.com/jl-nats"
+        ]
+      },
+      {
+        "name": "Lúcia Wright",
+        "socials": [
+          "https://devpost.com/lucia6w"
+        ]
+      }
+    ],
+    "hackathon": "GreatUniHack 2023",
+    "organizers": [],
+    "year": 2023,
+    "source_url": "https://devpost.com/software/treoguessr",
+    "demo_url": null,
+    "repo_url": "https://github.com/jl-nats/treoguessr"
+  },
+  {
+    "title": "Parliament Wow!",
+    "one_liner": "Live transcription and plain-language breakdown of UK parliamentary speeches and votes so democracy is readable in real time.",
+    "builders": [
+      {
+        "name": "Matt Carey",
+        "socials": [
+          "https://devpost.com/mattzcarey"
+        ]
+      },
+      {
+        "name": "Sunil Pai",
+        "socials": [
+          "https://devpost.com/threepointone90"
+        ]
+      },
+      {
+        "name": "Thomas Ankcorn",
+        "socials": [
+          "https://devpost.com/ThomasAnkcorn"
+        ]
+      }
+    ],
+    "hackathon": "Mistral AI London Hackathon",
+    "organizers": [],
+    "year": 2024,
+    "source_url": "https://devpost.com/software/parliament-wow",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "Rise 'n' Sign",
+    "one_liner": "Webcam ASL-to-speech tool aimed at shops and services so deaf customers can order without fighting a drive-thru mask.",
+    "builders": [
+      {
+        "name": "Vrushali Ashok",
+        "socials": [
+          "https://devpost.com/vrushaliashok17"
+        ]
+      },
+      {
+        "name": "Saron Tewolde",
+        "socials": [
+          "https://devpost.com/st2403"
+        ]
+      },
+      {
+        "name": "Sasha",
+        "socials": [
+          "https://devpost.com/sashasood27"
+        ]
+      },
+      {
+        "name": "Ayushi Mahajan",
+        "socials": [
+          "https://devpost.com/am4606"
+        ]
+      }
+    ],
+    "hackathon": "Bath Wackathon 2024",
+    "organizers": [],
+    "year": 2024,
+    "source_url": "https://devpost.com/software/rise-n-sign",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "RayAI - Screen Reader Assistant",
+    "one_liner": "Chrome extension that invents missing image alt text with vision APIs so screen readers can describe the web.",
+    "builders": [
+      {
+        "name": "Luke Harries",
+        "socials": [
+          "https://devpost.com/lharries"
+        ]
+      },
+      {
+        "name": "filip43 Kozera",
+        "socials": [
+          "https://devpost.com/filip43"
+        ]
+      },
+      {
+        "name": "matiii",
+        "socials": [
+          "https://devpost.com/matiii"
+        ]
+      },
+      {
+        "name": "Marcin Kolaszewski",
+        "socials": [
+          "https://devpost.com/marcin_kolaszewski"
+        ]
+      }
+    ],
+    "hackathon": "Hack Cambridge Ternary",
+    "organizers": [],
+    "year": 2018,
+    "source_url": "https://devpost.com/software/rayai-screen-reader-assistant",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "BrightBoard",
+    "one_liner": "On-demand analysis of whiteboard and slide photos into knowledge alerts for more accessible classroom learning.",
+    "builders": [
+      {
+        "name": "Edward Fleri Soler",
+        "socials": [
+          "https://devpost.com/EdwardFleriSoler"
+        ]
+      },
+      {
+        "name": "Klaudia Krawiecka",
+        "socials": [
+          "https://devpost.com/Klakra"
+        ]
+      },
+      {
+        "name": "Caterina Mrose",
+        "socials": [
+          "https://devpost.com/caterinamrose"
+        ]
+      },
+      {
+        "name": "James Pavur",
+        "socials": [
+          "https://devpost.com/JamesPavur"
+        ]
+      }
+    ],
+    "hackathon": "Hack Cambridge Ternary",
+    "organizers": [],
+    "year": 2018,
+    "source_url": "https://devpost.com/software/brightboard",
+    "demo_url": null,
+    "repo_url": "https://github.com/pavja2/hackcambridge"
+  },
+  {
+    "title": "ENA Deaf Assistant",
+    "one_liner": "Quest VR passthrough app with live subtitles and BSL-to-speech so deaf users can follow face-to-face conversation.",
+    "builders": [
+      {
+        "name": "Zac Grey",
+        "socials": [
+          "https://devpost.com/zjg23"
+        ]
+      },
+      {
+        "name": "Rich Balatay",
+        "socials": [
+          "https://devpost.com/rb2650"
+        ]
+      }
+    ],
+    "hackathon": "Bath Hack 2025",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/ena-deaf-assistant",
+    "demo_url": null,
+    "repo_url": "https://github.com/Aspect102/ENA-Deaf-Assistant"
+  },
+  {
+    "title": "HeatSafe",
+    "one_liner": "Temperature monitor that warns users when their body heat trend points toward heat stroke.",
+    "builders": [
+      {
+        "name": "Amber E. Moseri",
+        "socials": [
+          "https://devpost.com/amber-001-rgb"
+        ]
+      },
+      {
+        "name": "Kristin Villena",
+        "socials": [
+          "https://devpost.com/kristinovillena"
+        ]
+      },
+      {
+        "name": "Ashli Francis",
+        "socials": [
+          "https://devpost.com/fraashli"
+        ]
+      },
+      {
+        "name": "Gloria Yiadom Boakye",
+        "socials": [
+          "https://devpost.com/GloriaYBoakye"
+        ]
+      }
+    ],
+    "hackathon": "ElleHacks 2024",
+    "organizers": [],
+    "year": 2024,
+    "source_url": "https://devpost.com/software/heatsafe",
+    "demo_url": null,
+    "repo_url": "https://github.com/kristinvillena/HeatSafe"
+  },
+  {
+    "title": "Impact Horizon",
+    "one_liner": "Interactive climate-policy simulator where you sit as policymaker and see jobs, emissions, energy demand, and community well-being shift in real time.",
+    "builders": [
+      {
+        "name": "Nishant Patil",
+        "socials": [
+          "https://devpost.com/xfd-nishant"
+        ]
+      }
+    ],
+    "hackathon": "Hacktivism II",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/impact-horizon",
+    "demo_url": "https://impact-horizon-v1.vercel.app/",
+    "repo_url": "https://github.com/xfd-nishant/impact-horizon"
+  },
+  {
+    "title": "Canopy",
+    "one_liner": "AI remote-care platform with a 3D garden for elderly check-ins, a family Nest dashboard, and clinician alerts before a crisis.",
+    "builders": [
+      {
+        "name": "Marco Anthony Ayuste",
+        "socials": [
+          "https://devpost.com/minifiguresgt"
+        ]
+      },
+      {
+        "name": "Aahir Chakraborty-Saha",
+        "socials": [
+          "https://devpost.com/roofaioo7"
+        ]
+      },
+      {
+        "name": "Christie Ko",
+        "socials": [
+          "https://devpost.com/klcchristie"
+        ]
+      },
+      {
+        "name": "Rojella Santos",
+        "socials": [
+          "https://devpost.com/santosrojella"
+        ]
+      }
+    ],
+    "hackathon": "Hack the Globe 2026",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/canopy-a0qp35",
+    "demo_url": "https://canopyapp.vercel.app",
+    "repo_url": "https://github.com/RapidShip-Software/hacktheglobe"
+  },
+  {
+    "title": "CivicConnect",
+    "one_liner": "Residents report local issues with photos and video, map them in real time, upvote urgency, and track resolution.",
+    "builders": [
+      {
+        "name": "Zaur Bağışov",
+        "socials": [
+          "https://devpost.com/bagisovzaur6"
+        ]
+      }
+    ],
+    "hackathon": "Youth Coders Hack 2025",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/civicconnect-31msxc",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "HEAR.I.B.: Smart Hearing Aid",
+    "one_liner": "Gaze-tracked beamforming that locks onto the speaker you look at, then isolates and boosts their voice in a noisy room.",
+    "builders": [
+      {
+        "name": "Jennifer (Jaehei) Kim",
+        "socials": [
+          "https://devpost.com/jennkimerson"
+        ]
+      },
+      {
+        "name": "Samuel Lee",
+        "socials": [
+          "https://devpost.com/SamLee514"
+        ]
+      },
+      {
+        "name": "John Harrington",
+        "socials": [
+          "https://devpost.com/harringtonjohn"
+        ]
+      },
+      {
+        "name": "Alex Quach",
+        "socials": [
+          "https://devpost.com/aquach998"
+        ]
+      }
+    ],
+    "hackathon": "HackMIT 2019",
+    "organizers": [],
+    "year": 2019,
+    "source_url": "https://devpost.com/software/smart-hearing-aid-hear-i-b",
+    "demo_url": null,
+    "repo_url": "https://github.com/SamLee514/HackMIT2019"
+  },
+  {
+    "title": "Emergency Risk Assessment",
+    "one_liner": "Accessibility-first pre-disaster questionnaire that scores disabled and elderly residents' risk and shares it with emergency services alongside NOAA alerts.",
+    "builders": [
+      {
+        "name": "Alexander Freedman",
+        "socials": [
+          "https://devpost.com/Alexander-Freedman"
+        ]
+      },
+      {
+        "name": "Niki Yuan",
+        "socials": [
+          "https://devpost.com/confuseDcosmonauT"
+        ]
+      },
+      {
+        "name": "NataliaDzielnicka Dzielnicka",
+        "socials": [
+          "https://devpost.com/NataliaDzielnicka"
+        ]
+      },
+      {
+        "name": "Grace Wang",
+        "socials": [
+          "https://devpost.com/gwwang0925"
+        ]
+      }
+    ],
+    "hackathon": "PlutoHacks 2024",
+    "organizers": [],
+    "year": 2024,
+    "source_url": "https://devpost.com/software/alert-gyo0xw",
+    "demo_url": "https://confusedcosmonaut.github.io/EmergencyRiskAssessment/",
+    "repo_url": "https://github.com/confuseDcosmonauT/EmergencyRiskAssessment"
+  },
+  {
+    "title": "ProtectionIV",
+    "one_liner": "Turns a flood, wildfire, tornado, or earthquake alert into a location-specific action plan from live elevation, fire, weather, and map data.",
+    "builders": [
+      {
+        "name": "David F",
+        "socials": [
+          "https://devpost.com/wdfan33"
+        ]
+      },
+      {
+        "name": "Tab Huang",
+        "socials": [
+          "https://devpost.com/tabisawesome-t1"
+        ]
+      }
+    ],
+    "hackathon": "USAII® Global AI Hackathon 2026",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/prepaster",
+    "demo_url": "https://tabsite.vercel.app/usaii",
+    "repo_url": "https://github.com/tab-huang/protectioniv"
+  },
+  {
+    "title": "Civic Lens",
+    "one_liner": "AI that translates, analyzes, and visualizes multilingual civic feedback so policymakers can see representation gaps.",
+    "builders": [
+      {
+        "name": "Neil Sharma",
+        "socials": [
+          "https://devpost.com/neilsharma425"
+        ]
+      },
+      {
+        "name": "Riddhi Tikoo",
+        "socials": [
+          "https://devpost.com/rbtmessages"
+        ]
+      }
+    ],
+    "hackathon": "Hacktivism II",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/civiclens-kwf7qa",
+    "demo_url": null,
+    "repo_url": "https://github.com/NeilSharma425/Civic-Lens"
+  },
+  {
+    "title": "Eyelink",
+    "one_liner": "One app for audio navigation, live speech↔ASL translation, wheelchair-friendly routing, and booking a travel assistant.",
+    "builders": [
+      {
+        "name": "Mohit Goyal",
+        "socials": [
+          "https://devpost.com/mohitgoyal09042006"
+        ]
+      },
+      {
+        "name": "Angel Gupta",
+        "socials": [
+          "https://devpost.com/angelgupt16"
+        ]
+      }
+    ],
+    "hackathon": "Gen AI Chakra 4 Smart Cities Hackathon",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/eyelink-kx1pb2",
+    "demo_url": "https://asl-neon.vercel.app/",
+    "repo_url": null
+  },
+  {
+    "title": "Photosafe",
+    "one_liner": "Affordable IoT neonatal phototherapy monitor that cuts the lamp on overheating, UV leak, or unsafe light intensity.",
+    "builders": [
+      {
+        "name": "Zelia Abubakar",
+        "socials": [
+          "https://devpost.com/zeeliabubakar"
+        ]
+      }
+    ],
+    "hackathon": "Hacktivism II",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/photosafe-6ma15z",
+    "demo_url": null,
+    "repo_url": null
+  },
+  {
+    "title": "BemVo",
+    "one_liner": "Accessible medication-adherence app that lets elderly patients check off doses while caregivers watch progress in real time.",
+    "builders": [
+      {
+        "name": "Emily Augusto",
+        "socials": [
+          "https://devpost.com/emilyaugusto4"
+        ]
+      }
+    ],
+    "hackathon": "Hacktivism II",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/bemvo",
+    "demo_url": null,
+    "repo_url": "https://github.com/emilyaugusto/BemVoApp"
+  },
+  {
+    "title": "Label Ai",
+    "one_liner": "Point a camera at a food package and get ingredients, allergens, and nutrition risks decoded in about three seconds.",
+    "builders": [
+      {
+        "name": "Himanshu Soni",
+        "socials": [
+          "https://devpost.com/h30s-soni"
+        ]
+      }
+    ],
+    "hackathon": "Virtu Hack",
+    "organizers": [],
+    "year": 2025,
+    "source_url": "https://devpost.com/software/label-ai-c6tzp1",
+    "demo_url": "https://labelai-kappa.vercel.app",
+    "repo_url": "https://github.com/h30s/Label_Ai"
+  },
+  {
+    "title": "iris",
+    "one_liner": "Voice-first phone browser tool for blind and low-vision users: ask aloud, scan a product, hear the answer with a confidence rating.",
+    "builders": [
+      {
+        "name": "Natalie Kan",
+        "socials": [
+          "https://devpost.com/killlel"
+        ]
+      },
+      {
+        "name": "Jestin Roy",
+        "socials": [
+          "https://devpost.com/jestinroy3"
+        ]
+      },
+      {
+        "name": "Anuj Ranjan",
+        "socials": [
+          "https://devpost.com/aran0048"
+        ]
+      },
+      {
+        "name": "Natalia Elyssa Chan",
+        "socials": [
+          "https://devpost.com/natalia-elyssa-chan"
+        ]
+      }
+    ],
+    "hackathon": "UNIHACK 2026, funded by the European Union",
+    "organizers": [],
+    "year": 2026,
+    "source_url": "https://devpost.com/software/iris-ndklah",
+    "demo_url": null,
+    "repo_url": null
+  }
+]

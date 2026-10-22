@@ -1,0 +1,12 @@
+node_modules
+.env
+data/*.sqlite
+data/*.sqlite-*
+data/*.sqlite-journal
+*.log
+.vercel
+.DS_Store
+
+# Apestron .ttf + license stay local. The .otf is the display face and is committed.
+fonts/Apestron.ttf
+fonts/Apestron-LICENSE.txt

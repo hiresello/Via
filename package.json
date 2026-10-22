@@ -1,0 +1,22 @@
+{
+  "name": "via",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "test": "node --test test/loop.test.js",
+    "demo": "node src/cli.js demo",
+    "seed": "node src/cli.js seed",
+    "rank": "node src/cli.js rank",
+    "smoke": "bash scripts/smoke.sh",
+    "thumbs": "node scripts/generate-thumbs.js",
+    "start": "node src/web/server.js",
+    "bot": "node src/discord/bot.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.21.0",
+    "sharp": "^0.35.5"
+  }
+}
