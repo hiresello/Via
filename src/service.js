@@ -161,8 +161,14 @@ export function saveProfile(ontology, input) {
 }
 
 export function presentBoard(ontology) {
-  const snapshots = ontology.query({ type: 'RankSnapshot' });
-  const snapshot = snapshots.sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id))[0] || null;
+  const snapshots = ontology.query({ type: 'RankSnapshot' })
+    .sort((a, b) => b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id));
+  const snapshot = snapshots[0] || null;
+  const previous = snapshots[1] || null;
+  const prevRank = new Map();
+  for (const entry of previous?.ordered || []) {
+    if (entry?.project_id != null && entry.rank != null) prevRank.set(entry.project_id, entry.rank);
+  }
   const projects = ontology.query({ type: 'Project' });
   const people = ontology.query({ type: 'Person' });
   const events = ontology.query({ type: 'Event' });
@@ -187,8 +193,12 @@ export function presentBoard(ontology) {
     const orgs = (project.organizer_ids || [])
       .map((id) => organizers.find((item) => item.id === id))
       .filter(Boolean);
+    const rank = entry.rank || index + 1;
+    const before = prevRank.get(project.id);
+    const delta = before == null ? null : before - rank;
     return {
-      rank: entry.rank || index + 1,
+      rank,
+      delta,
       score: entry.score,
       reason: entry.reason,
       likes: liveLikes(ontology, project.id).length,

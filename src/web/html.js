@@ -182,7 +182,18 @@ export function renderPrivacy() {
 
 function rowHtml(row, origin = publicUrl()) {
   const project = row.project;
-  const rank1 = row.rank === 1;
+  const medal = row.rank === 1 ? 'via-card--rank1 via-card--gold'
+    : row.rank === 2 ? 'via-card--silver'
+      : row.rank === 3 ? 'via-card--bronze'
+        : '';
+  const scoreNum = Number(row.score);
+  const pct = Number.isFinite(scoreNum) ? Math.max(0, Math.min(100, Math.round(scoreNum))) : 0;
+  const delta = Number(row.delta);
+  const arrow = Number.isFinite(delta) && delta > 0
+    ? `<span class="via-delta via-delta--up">↑${delta}</span>`
+    : Number.isFinite(delta) && delta < 0
+      ? `<span class="via-delta via-delta--down">↓${Math.abs(delta)}</span>`
+      : '';
   const builders = row.builders.map((person) => person.display_name).filter(Boolean);
   const metaBits = [
     builders.length ? builders.join(' · ') : '',
@@ -191,16 +202,20 @@ function rowHtml(row, origin = publicUrl()) {
   const reason = specificReason(row.reason);
   const thumb = projectThumbSrc(project, origin);
   const projectHref = `/p/${encodeURIComponent(project.id)}`;
-  const cardClass = rank1
-    ? 'via-card via-card--rank1 via-card--post via-enter'
-    : 'via-card via-card--post';
+  const cardClass = `via-card via-card--post ${medal}`.trim();
   return `<li class="${cardClass}">
     <a class="via-thumb" href="${escapeHtml(projectHref)}">
       <img src="${escapeHtml(thumb)}" alt="${escapeHtml(caps(project.title || 'untitled'))}" width="1080" height="1350" loading="lazy">
+      <span class="via-rank">${caps(String(row.rank).padStart(2, '0'))}</span>
+      ${arrow}
     </a>
     <div class="via-card__body">
       <div class="via-card__head">
-        <div class="via-rank">${caps(String(row.rank).padStart(2, '0'))}</div>
+        <div class="via-points" aria-label="Score ${pct}, ${row.likes} likes">
+          <span class="via-points__n">${pct}</span>
+          <span class="via-bar"><span class="via-bar__fill" style="width:${pct}%"></span></span>
+          <span class="via-points__likes">${row.likes} likes</span>
+        </div>
         <form method="post" action="/like" class="via-actions like">
           <input type="hidden" name="project_id" value="${escapeHtml(project.id)}">
           <input type="hidden" name="signal" value="like">
@@ -272,24 +287,54 @@ ${displayOverride}
 <link rel="stylesheet" href="/via-ui.css">
 <style>
   a, a:hover, a:visited { text-decoration: none; }
-  .via-shell { width: min(720px, calc(100% - 48px)); }
+  .via-shell { width: min(1080px, calc(100% - 32px)); }
   .via-nav { margin-bottom: 8px; }
   .via-nav__links a { color: var(--via-muted); }
   .via-hero { padding: 48px 0 40px; }
   .via-hero .via-display { font-size: clamp(3.25rem, 8vw, 4.75rem); letter-spacing: 0.01em; }
   .via-lede { margin: 16px 0 0; color: var(--via-muted); font-family: var(--via-font-ui); font-weight: 400; font-size: 15px; }
-  .via-board { list-style: none; margin: 0; padding: 0; display: grid; gap: 56px; }
+  .via-board {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 28px; justify-content: center;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 320px));
+  }
   .via-card--post {
-    display: grid; gap: 16px; padding: 0; margin: 0; overflow: hidden;
+    display: grid; gap: 12px; padding: 0; margin: 0; overflow: hidden; max-width: 320px;
     background: transparent; border: 0; box-shadow: none; backdrop-filter: none;
   }
+  .via-card--gold { outline: 2px solid #e6c15a; border-radius: 18px; }
+  .via-card--silver { outline: 2px solid #c5ccd4; border-radius: 18px; }
+  .via-card--bronze { outline: 2px solid #c9844a; border-radius: 18px; }
+  .via-card--gold .via-rank { color: #e6c15a; }
+  .via-card--silver .via-rank { color: #d5dbe2; }
+  .via-card--bronze .via-rank { color: #e0a36a; }
   .via-card--post .via-card__body { padding: 4px 0 0; display: grid; gap: 12px; }
   .via-card__title { font-size: clamp(1.75rem, 4vw, 2.35rem); }
-  .via-thumb { display: block; margin: 0; background: #080808; border-radius: 16px; overflow: hidden; }
+  .via-thumb { display: block; position: relative; margin: 0; background: #080808; border-radius: 16px; overflow: hidden; }
   .via-thumb img {
-    display: block; width: 100%; height: auto; aspect-ratio: 4 / 5;
+    display: block; width: 100%; height: auto; aspect-ratio: 4 / 5; min-height: 300px;
     object-fit: cover; border: 0;
   }
+  .via-thumb .via-rank {
+    position: absolute; left: 12px; top: 10px;
+    font-size: 4.5rem; line-height: 0.85; color: #f2f2f2;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.85);
+  }
+  .via-delta {
+    position: absolute; right: 12px; top: 14px;
+    font-family: var(--via-font-ui); font-size: 14px; font-weight: 400;
+    letter-spacing: 0.04em;
+  }
+  .via-delta--up { color: #7cff77; }
+  .via-delta--down { color: #ff5a1f; }
+  .via-points { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; width: 100%; }
+  .via-points__n { font-family: var(--via-font-display); font-size: 1.35rem; letter-spacing: 0.04em; }
+  .via-points__likes { color: var(--via-muted); font-size: 12px; }
+  .via-bar { display: block; height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; }
+  .via-bar__fill { display: block; height: 100%; background: #ff5a1f; }
+  .via-card--gold .via-bar__fill { background: #e6c15a; }
+  .via-card--silver .via-bar__fill { background: #c5ccd4; }
+  .via-card--bronze .via-bar__fill { background: #c9844a; }
   .via-thumb--hero { border-radius: 16px; }
   .via-liner, .via-reason, .via-meta-line { margin: 0; font-family: var(--via-font-ui); font-weight: 400; }
   .via-liner { color: var(--via-ink); font-size: 16px; line-height: 1.45; max-width: 42em; }

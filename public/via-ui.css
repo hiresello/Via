@@ -210,7 +210,7 @@
 /* -------------------------------------------------------------------------- */
 
 .via-shell {
-  width: min(720px, calc(100% - 2 * var(--via-space-5)));
+  width: min(1080px, calc(100% - 2 * var(--via-space-5)));
   margin-inline: auto;
   padding-block: var(--via-space-5) var(--via-space-8);
 }
