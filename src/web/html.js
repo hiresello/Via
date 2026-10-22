@@ -185,7 +185,10 @@ export function renderMe(person, error, { next = '', like = '' } = {}) {
         <h1 class="via-display">${caps(person?.display_name || 'Your name')}</h1>
       </section>
       <form class="via-glass via-card via-form" method="post" action="/me">
+        ${like ? '<p class="via-notice">Add your name to like that build. We will save the like and take you back.</p>' : ''}
         ${error ? `<p class="via-error">${escapeHtml(error)}</p>` : ''}
+        ${next ? `<input type="hidden" name="next" value="${escapeHtml(next)}">` : ''}
+        ${like ? `<input type="hidden" name="like" value="${escapeHtml(like)}">` : ''}
         <div class="via-field-row"><label class="via-label">Name</label><input class="via-input" name="display_name" required value="${escapeHtml(person?.display_name || '')}"></div>
         <div class="via-field-row"><label class="via-label">Pseudonym</label><input class="via-input" name="pseudonym" value="${escapeHtml(person?.pseudonym || '')}"></div>
         <div class="via-field-row"><label class="via-label">Discord id</label><input class="via-input" name="discord_id" value="${escapeHtml(person?.discord_id || '')}"></div>

@@ -319,6 +319,11 @@ test('BUILDS + BUILDERS pages: logo, favicon, medals, no BAR label, cached Syste
     assert.ok(fs.existsSync(path.join(rootDir, 'public', file)), `${file} missing`);
   }
   await assert.rejects(() => submitProject(ontology, { title: 'Bad link', demo_url: 'javascript:alert(1)' }), /http\(s\)/);
+  const { renderMe } = await import('../src/web/html.js');
+  const me = renderMe(null, null, { next: '/#p-canopy', like: 'prj_canopy' });
+  assert.match(me, /class="via-notice"/);
+  assert.match(me, /name="next" value="\/#p-canopy"/);
+  assert.match(me, /name="like" value="prj_canopy"/);
 
   const previous = process.env.OPENROUTER_API_KEY;
   process.env.OPENROUTER_API_KEY = 'test-key-not-real';
